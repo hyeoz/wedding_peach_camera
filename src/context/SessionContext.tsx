@@ -17,7 +17,7 @@ import React, {
   useState,
 } from 'react';
 
-import type { OverlayMode } from '@/data/library';
+import type { OverlayMode, UserLibraryMode } from '@/data/library';
 import {
   loadFavorites,
   saveFavorites,
@@ -40,6 +40,7 @@ interface SessionContextValue {
   selectFrame: (id: string) => void;
   toggleItemChoice: (id: string) => void;
   toggleFavorite: (mode: OverlayMode, id: string) => void;
+  forgetLibraryItem: (mode: UserLibraryMode, id: string) => void;
 
   addPlacedItem: (refId: string) => void;
   updatePlacedItem: (id: string, patch: Partial<PlacedItem>) => void;
@@ -87,6 +88,21 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const toggleFavorite = useCallback((favMode: OverlayMode, id: string) => {
     setFavorites((prev) => {
       const next = toggleFavoriteState(prev, favMode, id);
+      saveFavorites(next);
+      return next;
+    });
+  }, []);
+
+  /** 사용자 라이브러리에서 삭제된 항목을 현재 선택/즐겨찾기에서도 제거한다. */
+  const forgetLibraryItem = useCallback((itemMode: UserLibraryMode, id: string) => {
+    if (itemMode === 'frame') {
+      setSelectedFrameId((current) => (current === id ? null : current));
+    } else {
+      setSelectedItemIds((current) => current.filter((itemId) => itemId !== id));
+    }
+    setFavorites((prev) => {
+      if (!prev[itemMode].includes(id)) return prev;
+      const next = { ...prev, [itemMode]: prev[itemMode].filter((itemId) => itemId !== id) };
       saveFavorites(next);
       return next;
     });
@@ -155,6 +171,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       selectFrame,
       toggleItemChoice,
       toggleFavorite,
+      forgetLibraryItem,
       addPlacedItem,
       updatePlacedItem,
       deletePlacedItem,
@@ -177,6 +194,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       selectFrame,
       toggleItemChoice,
       toggleFavorite,
+      forgetLibraryItem,
       addPlacedItem,
       updatePlacedItem,
       deletePlacedItem,

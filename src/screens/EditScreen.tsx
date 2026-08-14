@@ -22,7 +22,8 @@ import { Thumb } from '@/components/Thumb';
 import { TopBar } from '@/components/TopBar';
 import { useProfile } from '@/context/ProfileContext';
 import { useSession } from '@/context/SessionContext';
-import { findSelectable } from '@/data/library';
+import { useUserLibrary } from '@/context/UserLibraryContext';
+import { sourceForItem } from '@/data/library';
 import type { RootStackParamList } from '@/navigation/types';
 import type { PlacedItem } from '@/types';
 import { fonts, radius, spacing, useTheme, useThemedStyles, type ThemeColors } from '@/theme';
@@ -49,6 +50,7 @@ export function EditScreen({ navigation }: Props) {
     setResultUri,
   } = useSession();
   const { profile } = useProfile();
+  const { getItem } = useUserLibrary();
   const colors = useTheme();
   const styles = useThemedStyles(makeStyles);
 
@@ -65,10 +67,12 @@ export function EditScreen({ navigation }: Props) {
   const trayItems = useMemo(
     () =>
       selectedItemIds
-        .map((id) => findSelectable(mode, id))
+        .map((id) => getItem(mode, id))
         .filter((it): it is NonNullable<typeof it> => Boolean(it)),
-    [selectedItemIds, mode],
+    [selectedItemIds, mode, getItem],
   );
+
+  const selectedFrame = selectedFrameId ? getItem('frame', selectedFrameId) : undefined;
 
   if (!photo) {
     return (
@@ -150,7 +154,7 @@ export function EditScreen({ navigation }: Props) {
             />
 
             {mode === 'frame' ? (
-              <FrameOverlay frameId={selectedFrameId} showLabel={!capturing} />
+              <FrameOverlay frame={selectedFrame} showLabel={!capturing} />
             ) : (
               placedItems.map((item: PlacedItem) => (
                 <PlacedItemView
@@ -159,6 +163,7 @@ export function EditScreen({ navigation }: Props) {
                   active={activeItemId === item.id}
                   hideChrome={capturing}
                   nickname={profile.nickname}
+                  sticker={item.kind === 'sticker' ? getItem('sticker', item.refId) : undefined}
                   canvasOrigin={canvasOrigin}
                   onActivate={setActiveItem}
                   onCommit={updatePlacedItem}
@@ -181,7 +186,7 @@ export function EditScreen({ navigation }: Props) {
               <View style={styles.tray}>
                 {trayItems.map((it) => (
                   <Pressable key={it.id} onPress={() => addPlacedItem(it.id)} style={styles.trayItem}>
-                    <Thumb emoji={it.emoji} source={it.source} tint={colors.white} borderRadius={10} style={styles.trayThumb} />
+                    <Thumb emoji={it.emoji} source={sourceForItem(it)} tint={colors.white} borderRadius={10} style={styles.trayThumb} />
                   </Pressable>
                 ))}
               </View>

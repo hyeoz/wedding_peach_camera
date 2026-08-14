@@ -7,7 +7,8 @@ import { GradientBackground } from '@/components/GradientBackground';
 import { CameraIcon, ImageIcon } from '@/components/Icons';
 import { TopBar } from '@/components/TopBar';
 import { useSession } from '@/context/SessionContext';
-import { findSelectable, modeLabel } from '@/data/library';
+import { useUserLibrary } from '@/context/UserLibraryContext';
+import { modeLabel } from '@/data/library';
 import type { RootStackParamList } from '@/navigation/types';
 import { fonts, radius, spacing, useTheme, useThemedStyles, type ThemeColors } from '@/theme';
 
@@ -17,12 +18,13 @@ export function SourceScreen({ navigation }: Props) {
   const colors = useTheme();
   const styles = useThemedStyles(makeStyles);
   const { mode, selectedFrameId, selectedItemIds } = useSession();
+  const { getItem } = useUserLibrary();
 
   const summary =
     mode === 'frame'
-      ? findSelectable('frame', selectedFrameId ?? '')?.label ?? '-'
+      ? getItem('frame', selectedFrameId ?? '')?.label ?? '-'
       : selectedItemIds
-          .map((id) => findSelectable(mode, id)?.label)
+          .map((id) => getItem(mode, id)?.label)
           .filter(Boolean)
           .join(', ') || '-';
 

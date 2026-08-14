@@ -11,7 +11,7 @@ import Animated, {
 import { CloseIcon } from '@/components/Icons';
 import { TextCard } from '@/components/TextCard';
 import { Thumb } from '@/components/Thumb';
-import { findSticker } from '@/data/library';
+import { sourceForItem, type LibraryItem } from '@/data/library';
 import { findTemplate } from '@/data/textTemplates';
 import type { PlacedItem } from '@/types';
 import { useTheme, useThemedStyles, type ThemeColors } from '@/theme';
@@ -24,6 +24,8 @@ interface PlacedItemViewProps {
   item: PlacedItem;
   active: boolean;
   nickname: string;
+  /** 사용자 라이브러리에서 조회한 스티커 이미지/이름. */
+  sticker?: LibraryItem;
   /** 캡처/결과 렌더 시 선택 UI(점선·핸들·삭제)를 숨긴다. */
   hideChrome?: boolean;
   /** 캔버스 좌상단의 화면 절대 좌표 (핸들 회전/스케일 계산용). */
@@ -46,6 +48,7 @@ export function PlacedItemView({
   item,
   active,
   nickname,
+  sticker,
   hideChrome = false,
   canvasOrigin,
   onActivate,
@@ -56,7 +59,6 @@ export function PlacedItemView({
 }: PlacedItemViewProps) {
   const colors = useTheme();
   const styles = useThemedStyles(makeStyles);
-  const sticker = item.kind === 'sticker' ? findSticker(item.refId) : undefined;
   const template = item.kind === 'text' ? findTemplate(item.refId) : undefined;
 
   const tx = useSharedValue(item.x);
@@ -138,7 +140,7 @@ export function PlacedItemView({
         <View style={[showChrome && styles.active]}>
           {item.kind === 'sticker' ? (
             <Thumb
-              source={sticker?.source}
+              source={sourceForItem(sticker)}
               emoji={sticker?.emoji}
               resizeMode="contain"
               borderRadius={8}

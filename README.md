@@ -8,13 +8,15 @@
 1. **프로필(계정) + 이모지 테마** — 닉네임 + 이모지 아바타를 로컬에 저장해 계정처럼 사용.
    고른 이모지의 대표 색으로 **앱 전체 테마 색이 바뀜** (🍑 피치 / ⭐👑 골드 / 🐻 브라운 / 🐧 블루 / 🦄 퍼플 …)
 2. **3가지 모드**
-   - **프레임** — 사진이 프레임 중앙 영역에 들어감 (단일 선택)
-   - **스티커** — 사진 위에 이미지 스티커를 자유 배치 (다중 선택)
+   - **프레임** — 사용자가 이미지와 이름을 직접 등록, 사진 위에 프레임으로 적용 (단일 선택)
+   - **스티커** — 사용자가 이미지와 이름을 직접 등록, 사진 위에 자유 배치 (다중 선택)
    - **텍스트** — JSON 템플릿 기반 다이어리 텍스트 카드 (다중 선택)
+   - 등록한 프레임·스티커의 이미지는 앱 문서 폴더에, 목록은 AsyncStorage에 저장되며 삭제 가능
 3. **즐겨찾기** — 자주 쓰는 항목을 저장, 탭하면 선택을 건너뛰고 바로 촬영/갤러리로 (숏컷)
 4. **촬영 / 갤러리** — 카메라 촬영 또는 인앱 갤러리 그리드에서 사진 선택
 5. **편집** — 프레임 오버레이 확인 / 스티커·텍스트 카드 드래그·회전·크기조절·삭제
 6. **저장 · 공유** — 합성 결과를 갤러리에 저장하거나 시스템 공유 시트로 공유
+7. **브랜드 스플래시** — 쇼조풍 피치 카메라 아이콘과 핑크·보라 노을 스플래시, 줌아웃·별빛 애니메이션
 
 ### 텍스트 카드 (JSON 템플릿)
 
@@ -79,26 +81,23 @@ npm run ios / android   # 시뮬레이터/에뮬레이터
 src/
 ├── components/   # GradientBackground, TopBar, PillButton, Thumb, Icons,
 │                 # FrameOverlay, TextCard, PlacedItemView
-├── context/      # SessionContext(편집 플로우) · ProfileContext(계정)
-├── data/         # library(프레임/스티커) · textTemplates(JSON 텍스트 카드)
+├── context/      # SessionContext(편집 플로우) · ProfileContext(계정) · UserLibraryContext
+├── data/         # library(공통 타입/텍스트 연결) · textTemplates(JSON 텍스트 카드)
 ├── navigation/   # RootNavigator + 스택 타입
 ├── screens/      # Home / Profile / Select / Source / Capture / Gallery / Edit / Result
-├── storage/      # 즐겨찾기 AsyncStorage
+├── storage/      # 즐겨찾기 · 사용자 라이브러리 AsyncStorage/파일 영속화
 ├── theme/        # 디자인 토큰(spacing/radius/shadow) · fonts · palettes(이모지별) · ThemeContext
 ├── types/        # 공용 타입 · 에셋 모듈 선언
 └── utils/        # media(불러오기·저장·공유) · date
 ```
 
-## 에셋 (플레이스홀더)
+## 내 프레임·스티커 등록
 
-프레임/스티커 이미지는 아직 **플레이스홀더**(이모지 타일)입니다.
-실제 투명 PNG를 준비해 `assets/frames/`, `assets/stickers/`에 넣고
-`src/data/library.ts` 각 항목의 `source: require(...)`를 채우면 자동 반영됩니다.
-프레임은 현재 디자인의 핑크 보더로 렌더되며, 실제 프레임 PNG가 있으면 이미지로 대체됩니다.
+프레임/스티커 선택 화면에서 **등록** 버튼을 누르면 기기 사진 앱의 이미지를 고르고 이름을 입력할 수 있습니다.
+프레임은 사진 위를 덮는 방식이므로 투명 배경 PNG 사용을 권장합니다. 등록 이미지와 이름은 앱을
+재실행해도 유지되며, 목록 좌상단의 삭제 버튼으로 함께 제거할 수 있습니다.
 
 ## 다음 단계 (TODO)
 
-- [ ] 실제 프레임/스티커 PNG 에셋 추가
-- [ ] 앱 아이콘 / 스플래시 이미지 (`assets/`)
 - [ ] 프레임 모드에서 사진 위치/줌 조정
 - [ ] 텍스트 카드 템플릿 추가 및 색상 커스터마이즈

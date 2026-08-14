@@ -8,19 +8,24 @@ import Poppins_700Bold from '@expo-google-fonts/poppins/Poppins_700Bold.ttf';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { AnimatedSplash } from '@/components/AnimatedSplash';
 import { ProfileProvider } from '@/context/ProfileContext';
 import { SessionProvider } from '@/context/SessionContext';
+import { UserLibraryProvider } from '@/context/UserLibraryContext';
 import { RootNavigator } from '@/navigation/RootNavigator';
 import { ThemeProvider } from '@/theme/ThemeContext';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function App() {
+  const [showAnimatedSplash, setShowAnimatedSplash] = useState(true);
+  const [splashAnimationActive, setSplashAnimationActive] = useState(false);
+  const nativeSplashDismissed = useRef(false);
   const [fontsLoaded, fontError] = useFonts({
     Jua_400Regular,
     Gaegu_700Bold,
@@ -32,10 +37,17 @@ export default function App() {
 
   const onLayoutRoot = useCallback(() => {
     // 폰트가 준비되면 스플래시를 숨긴다. (에러 시에도 앱은 시스템 폰트로 동작)
-    if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync().catch(() => {});
+    if ((fontsLoaded || fontError) && !nativeSplashDismissed.current) {
+      nativeSplashDismissed.current = true;
+      SplashScreen.hideAsync()
+        .catch(() => {})
+        .finally(() => setSplashAnimationActive(true));
     }
   }, [fontsLoaded, fontError]);
+
+  const finishAnimatedSplash = useCallback(() => {
+    setShowAnimatedSplash(false);
+  }, []);
 
   if (!fontsLoaded && !fontError) {
     return null;
@@ -46,12 +58,20 @@ export default function App() {
       <SafeAreaProvider>
         <ProfileProvider>
           <ThemeProvider>
-            <SessionProvider>
-              <StatusBar style="dark" />
-              <View style={{ flex: 1 }}>
-                <RootNavigator />
-              </View>
-            </SessionProvider>
+            <UserLibraryProvider>
+              <SessionProvider>
+                <StatusBar style={showAnimatedSplash ? 'light' : 'dark'} />
+                <View style={{ flex: 1 }}>
+                  <RootNavigator />
+                  {showAnimatedSplash ? (
+                    <AnimatedSplash
+                      active={splashAnimationActive}
+                      onFinish={finishAnimatedSplash}
+                    />
+                  ) : null}
+                </View>
+              </SessionProvider>
+            </UserLibraryProvider>
           </ThemeProvider>
         </ProfileProvider>
       </SafeAreaProvider>
