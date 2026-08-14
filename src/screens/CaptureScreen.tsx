@@ -4,22 +4,28 @@ import React, { useRef, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Button } from '@/components/Button';
+import { GradientBackground } from '@/components/GradientBackground';
+import { ChevronLeft } from '@/components/Icons';
+import { PillButton } from '@/components/PillButton';
 import { useSession } from '@/context/SessionContext';
 import type { RootStackParamList } from '@/navigation/types';
-import { colors, radius, spacing } from '@/theme';
+import { colors, fonts, spacing } from '@/theme';
 import { pickImageFromLibrary } from '@/utils/media';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Capture'>;
 
 export function CaptureScreen({ navigation }: Props) {
-  const { setPhoto } = useSession();
+  const { mode, setPhoto, clearPlacedItems } = useSession();
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState<CameraType>('back');
   const [busy, setBusy] = useState(false);
   const cameraRef = useRef<CameraView>(null);
 
-  /** 셔터: 사진을 찍고 편집 화면으로 이동. */
+  const goEdit = () => {
+    clearPlacedItems();
+    navigation.navigate('Edit');
+  };
+
   const handleCapture = async () => {
     if (!cameraRef.current || busy) return;
     try {
@@ -27,7 +33,7 @@ export function CaptureScreen({ navigation }: Props) {
       const result = await cameraRef.current.takePictureAsync({ quality: 1 });
       if (!result) return;
       setPhoto({ uri: result.uri, width: result.width, height: result.height });
-      navigation.navigate('Editor');
+      goEdit();
     } catch (e) {
       Alert.alert('오류', e instanceof Error ? e.message : '촬영에 실패했습니다.');
     } finally {
@@ -35,14 +41,13 @@ export function CaptureScreen({ navigation }: Props) {
     }
   };
 
-  /** 갤러리에서 사진을 불러와 편집 화면으로 이동. */
   const handlePickFromLibrary = async () => {
     try {
       setBusy(true);
       const photo = await pickImageFromLibrary();
       if (!photo) return;
       setPhoto(photo);
-      navigation.navigate('Editor');
+      goEdit();
     } catch (e) {
       Alert.alert('오류', e instanceof Error ? e.message : '사진을 불러오지 못했습니다.');
     } finally {
@@ -50,42 +55,47 @@ export function CaptureScreen({ navigation }: Props) {
     }
   };
 
-  // 권한 로딩 중.
   if (!permission) {
-    return <SafeAreaView style={styles.container} />;
+    return <View style={styles.black} />;
   }
 
-  // 권한 미허용: 요청 UI + 갤러리 대안.
   if (!permission.granted) {
     return (
-      <SafeAreaView style={styles.permissionContainer} edges={['bottom']}>
-        <Text style={styles.permissionText}>
-          촬영을 위해 카메라 권한이 필요해요.{'\n'}권한 없이 갤러리에서 불러올 수도 있어요.
-        </Text>
-        <View style={styles.permissionButtons}>
-          <Button label="카메라 권한 허용" onPress={requestPermission} />
-          <Button
-            label="갤러리에서 불러오기"
-            variant="secondary"
-            onPress={handlePickFromLibrary}
-            loading={busy}
-          />
-        </View>
-      </SafeAreaView>
+      <GradientBackground>
+        <SafeAreaView style={styles.permission}>
+          <Text style={styles.permissionText}>
+            촬영을 위해 카메라 권한이 필요해요.{'\n'}권한 없이 갤러리에서 불러올 수도 있어요.
+          </Text>
+          <View style={styles.permissionButtons}>
+            <PillButton label="카메라 권한 허용" onPress={requestPermission} />
+            <PillButton
+              label="갤러리에서 불러오기"
+              variant="secondary"
+              onPress={handlePickFromLibrary}
+              loading={busy}
+            />
+          </View>
+        </SafeAreaView>
+      </GradientBackground>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <CameraView ref={cameraRef} style={styles.camera} facing={facing} />
+    <View style={styles.black}>
+      <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing={facing} />
+
+      {/* 프레임 모드: 반투명 흰 테두리 가이드 */}
+      {mode === 'frame' ? <View pointerEvents="none" style={styles.frameGuide} /> : null}
+
+      <SafeAreaView style={styles.topBar} edges={['top']}>
+        <Pressable style={styles.roundBtn} onPress={() => navigation.goBack()}>
+          <ChevronLeft color="#fff" size={18} />
+        </Pressable>
+      </SafeAreaView>
 
       <SafeAreaView style={styles.controls} edges={['bottom']}>
-        <Pressable
-          style={styles.sideButton}
-          onPress={handlePickFromLibrary}
-          disabled={busy}
-        >
-          <Text style={styles.sideButtonText}>갤러리</Text>
+        <Pressable style={styles.side} onPress={handlePickFromLibrary} disabled={busy}>
+          <Text style={styles.sideText}>갤러리</Text>
         </Pressable>
 
         <Pressable style={styles.shutter} onPress={handleCapture} disabled={busy}>
@@ -93,11 +103,11 @@ export function CaptureScreen({ navigation }: Props) {
         </Pressable>
 
         <Pressable
-          style={styles.sideButton}
+          style={styles.side}
           onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
           disabled={busy}
         >
-          <Text style={styles.sideButtonText}>전환</Text>
+          <Text style={styles.sideText}>전환</Text>
         </Pressable>
       </SafeAreaView>
     </View>
@@ -105,12 +115,33 @@ export function CaptureScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  black: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#111',
   },
-  camera: {
-    flex: 1,
+  frameGuide: {
+    position: 'absolute',
+    top: 90,
+    bottom: 140,
+    left: 24,
+    right: 24,
+    borderWidth: 10,
+    borderColor: 'rgba(255,255,255,0.7)',
+    borderRadius: 20,
+  },
+  topBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    padding: spacing.lg,
+  },
+  roundBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   controls: {
     position: 'absolute',
@@ -120,44 +151,40 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingVertical: spacing.lg,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    paddingVertical: spacing.xxl,
+    backgroundColor: 'rgba(0,0,0,0.3)',
   },
-  sideButton: {
+  side: {
     width: 64,
-    height: 64,
-    borderRadius: radius.full,
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  sideButtonText: {
-    color: '#fff',
+  sideText: {
+    fontFamily: fonts.title,
     fontSize: 14,
-    fontWeight: '600',
+    color: '#fff',
   },
   shutter: {
-    width: 76,
-    height: 76,
-    borderRadius: radius.full,
-    borderWidth: 4,
-    borderColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#fff',
+    borderWidth: 5,
+    borderColor: 'rgba(255,255,255,0.5)',
   },
   shutterInner: {
-    width: 60,
-    height: 60,
-    borderRadius: radius.full,
+    flex: 1,
+    borderRadius: 36,
     backgroundColor: '#fff',
   },
-  permissionContainer: {
+  permission: {
     flex: 1,
-    padding: spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.lg,
+    padding: spacing.xl,
+    gap: spacing.xl,
   },
   permissionText: {
+    fontFamily: fonts.body,
     fontSize: 16,
     color: colors.text,
     textAlign: 'center',
@@ -165,6 +192,6 @@ const styles = StyleSheet.create({
   },
   permissionButtons: {
     width: '100%',
-    gap: spacing.sm,
+    gap: spacing.md,
   },
 });

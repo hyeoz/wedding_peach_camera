@@ -1,13 +1,14 @@
-import type { OverlayMode } from '@/types';
-
 /**
- * 네비게이션 스택 파라미터 정의.
- * 대부분의 세션 상태는 SessionContext로 공유하지만,
- * 라우팅에 꼭 필요한 값(mode)만 params로도 넘긴다.
+ * 네비게이션 스택 파라미터.
+ * 대부분의 상태는 SessionContext / ProfileContext로 공유하므로 params는 비워둔다.
  */
 export type RootStackParamList = {
   Home: undefined;
-  SelectOverlay: { mode: OverlayMode };
+  Profile: undefined;
+  Select: undefined;
+  Source: undefined;
   Capture: undefined;
-  Editor: undefined;
+  Gallery: undefined;
+  Edit: undefined;
+  Result: undefined;
 };
