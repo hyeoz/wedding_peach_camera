@@ -7,12 +7,14 @@ import { DownloadIcon, RefreshIcon, ShareIcon } from '@/components/Icons';
 import { GradientBackground } from '@/components/GradientBackground';
 import { useSession } from '@/context/SessionContext';
 import type { RootStackParamList } from '@/navigation/types';
-import { colors, fonts, radius, spacing } from '@/theme';
+import { fonts, radius, spacing, useTheme, useThemedStyles, type ThemeColors } from '@/theme';
 import { saveToGallery, shareImage } from '@/utils/media';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Result'>;
 
 export function ResultScreen({ navigation }: Props) {
+  const colors = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const { resultUri } = useSession();
   const [toast, setToast] = useState('');
   const [saving, setSaving] = useState(false);
@@ -72,13 +74,13 @@ export function ResultScreen({ navigation }: Props) {
             onPress={handleShare}
             style={({ pressed }) => [styles.btn, styles.btnOutline, pressed && styles.pressed]}
           >
-            <ShareIcon />
+            <ShareIcon color={colors.text} />
             <Text style={styles.btnOutlineLabel}>공유</Text>
           </Pressable>
         </View>
 
         <Pressable style={styles.retake} onPress={() => navigation.navigate('Source')}>
-          <RefreshIcon />
+          <RefreshIcon color={colors.primaryDeep} />
           <Text style={styles.retakeLabel}>바로 다시 촬영</Text>
         </Pressable>
       </SafeAreaView>
@@ -86,7 +88,8 @@ export function ResultScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: spacing.md,

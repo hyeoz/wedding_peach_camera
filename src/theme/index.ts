@@ -1,37 +1,11 @@
 /**
- * 디자인 토큰 (design_handoff_camera_app 기준).
- * 색상/라운드/그림자/간격을 한곳에 모아 화면 코드가 하드코딩 hex를 쓰지 않게 한다.
+ * 테마 토큰 중 색상 외 상수(간격/라운드/그림자/폰트).
+ * 색상은 이모지 테마에 따라 바뀌므로 ThemeContext의 useTheme()로 가져온다.
  */
 import type { ViewStyle } from 'react-native';
 
 export { fonts } from './fonts';
-
-export const colors = {
-  /** 배경 그라디언트 (160deg). */
-  gradient: ['#ffe3f2', '#f6d7ff', '#e3d6ff'] as const,
-
-  /** Primary — 핫핑크 계열. */
-  primary: '#ff4fa3',
-  primaryDeep: '#b31877',
-  primaryDeeper: '#7a1150',
-  primaryBadge: '#d6207a',
-
-  /** Secondary — 라벤더 계열. */
-  secondary: '#9b6bff',
-  secondaryDeep: '#3d1a80',
-
-  /** 텍스트. */
-  text: '#3a1030',
-  textMuted: '#8a5f7c',
-
-  /** 라이트 틴트 / 보더. */
-  tintPink: '#ffe0f0',
-  tintPurple: '#ede2ff',
-  border: '#f0c9e2',
-
-  white: '#ffffff',
-  canvas: '#000000',
-} as const;
+export { useTheme, useThemedStyles, type ThemeColors } from './ThemeContext';
 
 export const spacing = {
   xs: 4,
@@ -49,11 +23,11 @@ export const radius = {
   pill: 999,
 } as const;
 
-/** 디자인의 0 6px 18px rgba(255,79,163,0.22) 그림자. */
+/** 부드러운 그림자 (테마와 무관하게 은은한 톤 유지). */
 export const shadow: ViewStyle = {
-  shadowColor: '#ff4fa3',
-  shadowOpacity: 0.22,
-  shadowRadius: 18,
+  shadowColor: '#7a1150',
+  shadowOpacity: 0.16,
+  shadowRadius: 16,
   shadowOffset: { width: 0, height: 6 },
   elevation: 6,
 };

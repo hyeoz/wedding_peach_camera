@@ -9,7 +9,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { colors, fonts, radius, spacing } from '@/theme';
+import { fonts, radius, spacing, useTheme, useThemedStyles, type ThemeColors } from '@/theme';
 
 type Variant = 'primary' | 'secondary' | 'outline';
 
@@ -33,6 +33,8 @@ export function PillButton({
   icon,
   style,
 }: PillButtonProps) {
+  const colors = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const isOutline = variant === 'outline';
   const bg =
     variant === 'primary' ? colors.primary : variant === 'secondary' ? colors.secondary : 'transparent';
@@ -64,7 +66,8 @@ export function PillButton({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   base: {
     minHeight: 48,
     paddingHorizontal: spacing.xl,

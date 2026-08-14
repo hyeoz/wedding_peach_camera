@@ -5,7 +5,8 @@
 
 ## 기능
 
-1. **프로필(계정)** — 닉네임 + 이모지 아바타를 로컬에 저장해 계정처럼 사용
+1. **프로필(계정) + 이모지 테마** — 닉네임 + 이모지 아바타를 로컬에 저장해 계정처럼 사용.
+   고른 이모지의 대표 색으로 **앱 전체 테마 색이 바뀜** (🍑 피치 / ⭐👑 골드 / 🐻 브라운 / 🐧 블루 / 🦄 퍼플 …)
 2. **3가지 모드**
    - **프레임** — 사진이 프레임 중앙 영역에 들어감 (단일 선택)
    - **스티커** — 사진 위에 이미지 스티커를 자유 배치 (다중 선택)
@@ -83,7 +84,7 @@ src/
 ├── navigation/   # RootNavigator + 스택 타입
 ├── screens/      # Home / Profile / Select / Source / Capture / Gallery / Edit / Result
 ├── storage/      # 즐겨찾기 AsyncStorage
-├── theme/        # 디자인 토큰(colors/spacing/radius/shadow) · fonts
+├── theme/        # 디자인 토큰(spacing/radius/shadow) · fonts · palettes(이모지별) · ThemeContext
 ├── types/        # 공용 타입 · 에셋 모듈 선언
 └── utils/        # media(불러오기·저장·공유) · date
 ```

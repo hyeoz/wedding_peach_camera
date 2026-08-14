@@ -9,12 +9,13 @@ import { ChevronLeft } from '@/components/Icons';
 import { PillButton } from '@/components/PillButton';
 import { useSession } from '@/context/SessionContext';
 import type { RootStackParamList } from '@/navigation/types';
-import { colors, fonts, spacing } from '@/theme';
+import { fonts, spacing, useThemedStyles, type ThemeColors } from '@/theme';
 import { pickImageFromLibrary } from '@/utils/media';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Capture'>;
 
 export function CaptureScreen({ navigation }: Props) {
+  const styles = useThemedStyles(makeStyles);
   const { mode, setPhoto, clearPlacedItems } = useSession();
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState<CameraType>('back');
@@ -114,7 +115,8 @@ export function CaptureScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   black: {
     flex: 1,
     backgroundColor: '#111',

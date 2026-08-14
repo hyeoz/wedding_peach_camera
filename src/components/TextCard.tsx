@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { TextTemplate } from '@/data/textTemplates';
 import { todayLabel } from '@/utils/date';
-import { colors, fonts, radius } from '@/theme';
+import { fonts, radius, useThemedStyles, type ThemeColors } from '@/theme';
 
 interface TextCardProps {
   template: TextTemplate;
@@ -29,6 +29,7 @@ export function TextCard({
   onToggleChoice,
   onEditNote,
 }: TextCardProps) {
+  const styles = useThemedStyles(makeStyles);
   const header = template.headerTemplate
     .replace('{nickname}', nickname || 'OOO')
     .replace('{date}', todayLabel());
@@ -82,7 +83,8 @@ export function TextCard({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   card: {
     minWidth: 200,
     maxWidth: 260,

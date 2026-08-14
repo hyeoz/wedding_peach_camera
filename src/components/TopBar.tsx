@@ -2,7 +2,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ChevronLeft } from '@/components/Icons';
-import { colors, fonts, spacing } from '@/theme';
+import { fonts, spacing, useTheme, useThemedStyles, type ThemeColors } from '@/theme';
 
 interface TopBarProps {
   title: string;
@@ -14,11 +14,13 @@ interface TopBarProps {
 
 /** 뒤로가기 + 타이틀로 구성된 상단 바. */
 export function TopBar({ title, onBack, centered = false, right }: TopBarProps) {
+  const colors = useTheme();
+  const styles = useThemedStyles(makeStyles);
   return (
     <View style={styles.row}>
       {onBack ? (
         <Pressable onPress={onBack} hitSlop={8} style={styles.back}>
-          <ChevronLeft />
+          <ChevronLeft color={colors.text} />
         </Pressable>
       ) : (
         <View style={styles.spacer} />
@@ -29,7 +31,8 @@ export function TopBar({ title, onBack, centered = false, right }: TopBarProps) 
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',

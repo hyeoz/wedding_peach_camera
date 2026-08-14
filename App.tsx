@@ -16,6 +16,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ProfileProvider } from '@/context/ProfileContext';
 import { SessionProvider } from '@/context/SessionContext';
 import { RootNavigator } from '@/navigation/RootNavigator';
+import { ThemeProvider } from '@/theme/ThemeContext';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -44,12 +45,14 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRoot}>
       <SafeAreaProvider>
         <ProfileProvider>
-          <SessionProvider>
-            <StatusBar style="dark" />
-            <View style={{ flex: 1 }}>
-              <RootNavigator />
-            </View>
-          </SessionProvider>
+          <ThemeProvider>
+            <SessionProvider>
+              <StatusBar style="dark" />
+              <View style={{ flex: 1 }}>
+                <RootNavigator />
+              </View>
+            </SessionProvider>
+          </ThemeProvider>
         </ProfileProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

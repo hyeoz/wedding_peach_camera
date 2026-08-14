@@ -2,9 +2,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 
-import { colors } from '@/theme';
+import { useTheme } from '@/theme';
 
-/** 앱 공통 배경 그라디언트 (160deg, #ffe3f2 → #f6d7ff → #e3d6ff). */
+/** 앱 공통 배경 그라디언트. 프로필 이모지 테마에 따라 색이 바뀐다. */
 export function GradientBackground({
   children,
   style,
@@ -12,6 +12,7 @@ export function GradientBackground({
   children?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
+  const colors = useTheme();
   return (
     <LinearGradient
       colors={colors.gradient}

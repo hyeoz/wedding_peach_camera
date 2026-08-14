@@ -4,14 +4,12 @@
 import React from 'react';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
-import { colors } from '@/theme';
-
 interface IconProps {
   size?: number;
   color?: string;
 }
 
-export function ChevronLeft({ size = 20, color = colors.text }: IconProps) {
+export function ChevronLeft({ size = 20, color = '#3a1030' }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path
@@ -96,7 +94,7 @@ export function ImageIcon({ size = 24, color = '#fff' }: IconProps) {
   );
 }
 
-export function CloseIcon({ size = 12, color = colors.primaryDeep }: IconProps) {
+export function CloseIcon({ size = 12, color = '#b31877' }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path d="M18 6L6 18M6 6l12 12" stroke={color} strokeWidth={3} strokeLinecap="round" />
@@ -118,7 +116,7 @@ export function DownloadIcon({ size = 18, color = '#fff' }: IconProps) {
   );
 }
 
-export function ShareIcon({ size = 18, color = colors.text }: IconProps) {
+export function ShareIcon({ size = 18, color = '#3a1030' }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Circle cx={6} cy={12} r={2.5} stroke={color} strokeWidth={2.2} />
@@ -129,7 +127,7 @@ export function ShareIcon({ size = 18, color = colors.text }: IconProps) {
   );
 }
 
-export function RefreshIcon({ size = 16, color = colors.primaryDeep }: IconProps) {
+export function RefreshIcon({ size = 16, color = '#b31877' }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path

@@ -9,7 +9,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { colors, fonts, radius } from '@/theme';
+import { fonts, radius, useTheme, useThemedStyles, type ThemeColors } from '@/theme';
 
 interface ThumbProps {
   source?: ImageSourcePropType;
@@ -36,15 +36,19 @@ export function Thumb({
   borderRadius = radius.thumb,
   style,
   resizeMode = 'contain',
-  tint = colors.tintPink,
+  tint,
 }: ThumbProps) {
+  const colors = useTheme();
+  const styles = useThemedStyles(makeStyles);
   if (source) {
     return (
       <Image source={source} resizeMode={resizeMode} style={[{ borderRadius }, style] as never} />
     );
   }
   return (
-    <View style={[styles.placeholder, { borderRadius, backgroundColor: tint }, style]}>
+    <View
+      style={[styles.placeholder, { borderRadius, backgroundColor: tint ?? colors.tintPink }, style]}
+    >
       <Text style={styles.emoji}>{emoji}</Text>
       {label ? (
         <Text numberOfLines={1} style={styles.label}>
@@ -55,7 +59,8 @@ export function Thumb({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   placeholder: {
     alignItems: 'center',
     justifyContent: 'center',

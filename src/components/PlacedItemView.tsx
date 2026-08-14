@@ -14,7 +14,7 @@ import { Thumb } from '@/components/Thumb';
 import { findSticker } from '@/data/library';
 import { findTemplate } from '@/data/textTemplates';
 import type { PlacedItem } from '@/types';
-import { colors } from '@/theme';
+import { useTheme, useThemedStyles, type ThemeColors } from '@/theme';
 
 export const STICKER_SIZE = 72;
 const MIN_SCALE = 0.5;
@@ -54,6 +54,8 @@ export function PlacedItemView({
   onToggleChoice,
   onEditNote,
 }: PlacedItemViewProps) {
+  const colors = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const sticker = item.kind === 'sticker' ? findSticker(item.refId) : undefined;
   const template = item.kind === 'text' ? findTemplate(item.refId) : undefined;
 
@@ -162,7 +164,7 @@ export function PlacedItemView({
               <Animated.View style={styles.handle} hitSlop={10} />
             </GestureDetector>
             <Pressable style={styles.delete} hitSlop={10} onPress={() => onDelete(item.id)}>
-              <CloseIcon />
+              <CloseIcon color={colors.primaryDeep} />
             </Pressable>
           </>
         ) : null}
@@ -171,7 +173,8 @@ export function PlacedItemView({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     position: 'absolute',
     left: 0,

@@ -25,7 +25,7 @@ import { useSession } from '@/context/SessionContext';
 import { findSelectable } from '@/data/library';
 import type { RootStackParamList } from '@/navigation/types';
 import type { PlacedItem } from '@/types';
-import { colors, fonts, radius, spacing } from '@/theme';
+import { fonts, radius, spacing, useTheme, useThemedStyles, type ThemeColors } from '@/theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Edit'>;
 
@@ -49,6 +49,8 @@ export function EditScreen({ navigation }: Props) {
     setResultUri,
   } = useSession();
   const { profile } = useProfile();
+  const colors = useTheme();
+  const styles = useThemedStyles(makeStyles);
 
   const shotRef = useRef<ViewShot>(null);
   const canvasRef = useRef<View>(null);
@@ -223,7 +225,8 @@ export function EditScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: spacing.sm,

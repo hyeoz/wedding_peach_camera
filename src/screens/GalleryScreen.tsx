@@ -9,12 +9,14 @@ import { PillButton } from '@/components/PillButton';
 import { TopBar } from '@/components/TopBar';
 import { useSession } from '@/context/SessionContext';
 import type { RootStackParamList } from '@/navigation/types';
-import { colors, fonts, spacing } from '@/theme';
+import { fonts, spacing, useTheme, useThemedStyles, type ThemeColors } from '@/theme';
 import { loadRecentPhotos, pickImageFromLibrary, resolveAssetUri } from '@/utils/media';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Gallery'>;
 
 export function GalleryScreen({ navigation }: Props) {
+  const colors = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const { setPhoto, clearPlacedItems } = useSession();
   const [assets, setAssets] = useState<MediaLibrary.Asset[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,7 +80,8 @@ export function GalleryScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: spacing.sm,

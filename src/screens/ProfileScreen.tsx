@@ -8,14 +8,18 @@ import { PillButton } from '@/components/PillButton';
 import { TopBar } from '@/components/TopBar';
 import { PROFILE_EMOJIS, useProfile } from '@/context/ProfileContext';
 import type { RootStackParamList } from '@/navigation/types';
-import { colors, fonts, radius, spacing } from '@/theme';
+import { fonts, radius, spacing, useTheme, useThemedStyles, type ThemeColors } from '@/theme';
+import { paletteForEmoji } from '@/theme/palettes';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Profile'>;
 
 export function ProfileScreen({ navigation }: Props) {
+  const colors = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const { profile, saveProfile } = useProfile();
   const [nickname, setNickname] = useState(profile.nickname);
   const [emoji, setEmoji] = useState(profile.emoji);
+  const previewPalette = paletteForEmoji(emoji);
 
   const handleSave = async () => {
     await saveProfile({ nickname, emoji });
@@ -28,14 +32,19 @@ export function ProfileScreen({ navigation }: Props) {
         <TopBar title="내 프로필" onBack={() => navigation.goBack()} />
 
         <View style={styles.body}>
-          {/* 미리보기 아바타 */}
+          {/* 미리보기 아바타 (선택한 이모지 테마색 미리보기) */}
           <View style={styles.preview}>
-            <View style={styles.previewAvatar}>
+            <View style={[styles.previewAvatar, { borderColor: previewPalette.primary }]}>
               <Text style={styles.previewEmoji}>{emoji}</Text>
             </View>
             <Text style={styles.previewName}>
               {nickname.trim() ? `${nickname.trim()}님` : 'OOO님'}
             </Text>
+            <View style={styles.swatchRow}>
+              <View style={[styles.swatch, { backgroundColor: previewPalette.primary }]} />
+              <View style={[styles.swatch, { backgroundColor: previewPalette.secondary }]} />
+              <Text style={styles.swatchHint}>이 색으로 앱 테마가 바뀌어요</Text>
+            </View>
           </View>
 
           <Text style={styles.label}>닉네임</Text>
@@ -71,7 +80,8 @@ export function ProfileScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: spacing.sm,
@@ -93,6 +103,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 3,
   },
   previewEmoji: {
     fontSize: 44,
@@ -101,6 +112,23 @@ const styles = StyleSheet.create({
     fontFamily: fonts.title,
     fontSize: 20,
     color: colors.text,
+  },
+  swatchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.xs,
+  },
+  swatch: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+  },
+  swatchHint: {
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: colors.textMuted,
+    marginLeft: spacing.xs,
   },
   label: {
     fontFamily: fonts.title,

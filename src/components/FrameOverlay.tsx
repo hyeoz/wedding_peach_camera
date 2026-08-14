@@ -2,7 +2,7 @@ import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
 import { findFrame } from '@/data/library';
-import { colors, fonts, radius } from '@/theme';
+import { fonts, radius, useThemedStyles, type ThemeColors } from '@/theme';
 
 interface FrameOverlayProps {
   frameId: string | null;
@@ -16,6 +16,7 @@ interface FrameOverlayProps {
  * - 없으면 디자인의 16px 핑크 보더로 렌더하고 하단에 프레임 이름 표시.
  */
 export function FrameOverlay({ frameId, showLabel = true }: FrameOverlayProps) {
+  const styles = useThemedStyles(makeStyles);
   const frame = frameId ? findFrame(frameId) : undefined;
 
   if (frame?.source) {
@@ -34,7 +35,8 @@ export function FrameOverlay({ frameId, showLabel = true }: FrameOverlayProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   border: {
     ...StyleSheet.absoluteFillObject,
     borderWidth: 16,

@@ -9,7 +9,7 @@ import { useProfile } from '@/context/ProfileContext';
 import { useSession } from '@/context/SessionContext';
 import type { OverlayMode } from '@/data/library';
 import type { RootStackParamList } from '@/navigation/types';
-import { colors, fonts, radius, shadow, spacing } from '@/theme';
+import { fonts, radius, shadow, spacing, useTheme, useThemedStyles, type ThemeColors } from '@/theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
@@ -23,39 +23,9 @@ interface ModeCard {
   icon: React.ReactNode;
 }
 
-const CARDS: ModeCard[] = [
-  {
-    mode: 'frame',
-    title: '프레임',
-    desc: '사진이 프레임 중앙 영역에 들어가요',
-    tint: colors.tintPink,
-    accent: colors.primary,
-    titleColor: colors.primaryDeeper,
-    icon: <FrameIcon />,
-  },
-  {
-    mode: 'sticker',
-    title: '스티커',
-    desc: '사진 위에 자유롭게 꾸며요',
-    tint: colors.tintPurple,
-    accent: colors.secondary,
-    titleColor: colors.secondaryDeep,
-    icon: <StarIcon size={24} fill="#fff" />,
-  },
-  {
-    mode: 'text',
-    title: '텍스트',
-    desc: '날짜·기록을 담은 텍스트 카드를 붙여요',
-    tint: '#fff2e0',
-    accent: '#ff9f43',
-    titleColor: '#a85a00',
-    icon: (
-      <Text style={{ fontFamily: fonts.title, fontSize: 22, color: colors.white }}>Aa</Text>
-    ),
-  },
-];
-
 export function HomeScreen({ navigation }: Props) {
+  const colors = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const { setMode, reset } = useSession();
   const { profile, hasProfile } = useProfile();
 
@@ -65,6 +35,37 @@ export function HomeScreen({ navigation }: Props) {
     setMode(mode);
     navigation.navigate('Select');
   };
+
+  // 프레임/스티커 카드는 테마색을 따르고, 텍스트 카드는 고유 웜톤을 유지한다.
+  const cards: ModeCard[] = [
+    {
+      mode: 'frame',
+      title: '프레임',
+      desc: '사진이 프레임 중앙 영역에 들어가요',
+      tint: colors.tintPink,
+      accent: colors.primary,
+      titleColor: colors.primaryDeeper,
+      icon: <FrameIcon />,
+    },
+    {
+      mode: 'sticker',
+      title: '스티커',
+      desc: '사진 위에 자유롭게 꾸며요',
+      tint: colors.tintPurple,
+      accent: colors.secondary,
+      titleColor: colors.secondaryDeep,
+      icon: <StarIcon size={24} fill="#fff" />,
+    },
+    {
+      mode: 'text',
+      title: '텍스트',
+      desc: '날짜·기록을 담은 텍스트 카드를 붙여요',
+      tint: '#fff2e0',
+      accent: '#ff9f43',
+      titleColor: '#a85a00',
+      icon: <Text style={{ fontFamily: fonts.title, fontSize: 22, color: colors.white }}>Aa</Text>,
+    },
+  ];
 
   return (
     <GradientBackground>
@@ -93,7 +94,7 @@ export function HomeScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.cards}>
-          {CARDS.map((c) => (
+          {cards.map((c) => (
             <Pressable
               key={c.mode}
               onPress={() => start(c.mode)}
@@ -116,7 +117,8 @@ export function HomeScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: spacing.xl,

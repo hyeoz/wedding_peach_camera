@@ -11,11 +11,13 @@ import { TopBar } from '@/components/TopBar';
 import { useSession } from '@/context/SessionContext';
 import { getSelectableItems, modeTitle } from '@/data/library';
 import type { RootStackParamList } from '@/navigation/types';
-import { colors, fonts, radius, shadow, spacing } from '@/theme';
+import { fonts, shadow, spacing, useTheme, useThemedStyles, type ThemeColors } from '@/theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Select'>;
 
 export function SelectScreen({ navigation }: Props) {
+  const colors = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const {
     mode,
     selectedFrameId,
@@ -127,7 +129,8 @@ export function SelectScreen({ navigation }: Props) {
 
 const COLUMN_GAP = spacing.md;
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: spacing.sm,
