@@ -34,11 +34,24 @@ export async function loadRecentPhotos(count = 30): Promise<MediaLibrary.Asset[]
     mediaType: 'photo',
     sortBy: [[MediaLibrary.SortBy.creationTime, false]],
   });
-  return res.assets;
+
+  // iOS의 `ph://`는 Photos 내부 식별자라 React Native Image가 직접 표시하지 못한다.
+  // 썸네일을 렌더링하기 전에 실제 로컬 URI로 바꾸고, 변환할 수 없는 항목은
+  // 시스템 사진 선택기에서 고를 수 있도록 인앱 목록에서는 제외한다.
+  const resolvedAssets = await Promise.all(
+    res.assets.map(async (asset) => {
+      const uri = await resolveAssetUri(asset);
+      return uri.startsWith('ph://') ? null : { ...asset, uri };
+    }),
+  );
+
+  return resolvedAssets.filter((asset): asset is MediaLibrary.Asset => asset !== null);
 }
 
 /** MediaLibrary 에셋을 합성/저장에 안전한 로컬 file:// uri로 변환. */
 export async function resolveAssetUri(asset: MediaLibrary.Asset): Promise<string> {
+  if (!asset.uri.startsWith('ph://')) return asset.uri;
+
   try {
     const info = await MediaLibrary.getAssetInfoAsync(asset);
     return info.localUri ?? asset.uri;
