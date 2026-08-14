@@ -24,8 +24,9 @@ const DEFAULT_PROFILE: Profile = { nickname: '', emoji: '🍑' };
 
 /** 아바타로 고를 수 있는 이모지 목록. */
 export const PROFILE_EMOJIS = [
-  '🍑', '🐰', '🐱', '🐻', '🌸', '⭐', '🍒', '🦄',
-  '🌷', '🐣', '🍓', '🐧', '🌈', '🧸', '💐', '👑',
+  '🍑', '🐰', '🐱', '🐻', '🌸', '🎀', '⭐', '🍒',
+  '🦄', '👾', '🌷', '🐣', '🍓', '🐧', '💦', '🌈',
+  '🧸', '💐', '👑',
 ];
 
 interface ProfileContextValue {
