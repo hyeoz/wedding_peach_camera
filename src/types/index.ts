@@ -1,33 +1,34 @@
 /**
- * 앱 전역에서 사용하는 핵심 타입 정의.
+ * 앱 전역 핵심 타입.
  */
+export type { OverlayMode } from '@/data/library';
 
-/** 오버레이 모드: 프레임(사진이 중앙에 들어감) 또는 스티커(사진 위에 붙임). */
-export type OverlayMode = 'frame' | 'sticker';
-
-/** 프레임/스티커로 사용할 이미지 자원. */
-export interface OverlayAsset {
-  /** 고유 id (즐겨찾기 저장 시 사용). */
-  id: string;
-  /** 이미지 uri (로컬 file:// 또는 asset:// 등). */
-  uri: string;
-  /** 프레임인지 스티커인지. */
-  mode: OverlayMode;
-  /** 표시용 이름 (선택). */
-  name?: string;
-  /** 원본 이미지 비율(가로/세로). 프레임 캔버스 비율 계산에 사용. */
-  aspectRatio?: number;
-}
-
-/** 촬영 or 불러온 사진. */
+/** 촬영/선택된 사진. */
 export interface Photo {
   uri: string;
   width?: number;
   height?: number;
 }
 
-/** 즐겨찾기에 저장되는 항목. */
-export interface FavoriteOverlay extends OverlayAsset {
-  /** 저장 시각 (정렬용). */
-  createdAt: number;
+/**
+ * 편집 캔버스에 배치된 항목 (이미지 스티커 또는 텍스트 카드).
+ */
+export interface PlacedItem {
+  /** 인스턴스 고유 id (p1, p2, ...). */
+  id: string;
+  /** 'sticker' = 이미지 스티커, 'text' = 텍스트 카드. */
+  kind: 'sticker' | 'text';
+  /** 스티커 라이브러리 id 또는 텍스트 템플릿 id. */
+  refId: string;
+  /** 캔버스 좌상단 기준 위치(px). */
+  x: number;
+  y: number;
+  /** 배율 (0.5 ~ 2.5). */
+  scale: number;
+  /** 회전(도). */
+  rotation: number;
+  /** 텍스트 카드 전용 — choice 줄들의 선택값 (key -> 옵션). */
+  choices?: Record<string, string>;
+  /** 텍스트 카드 전용 — note 줄들의 입력값 (key -> 텍스트). */
+  notes?: Record<string, string>;
 }

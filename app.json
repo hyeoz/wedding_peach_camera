@@ -3,13 +3,15 @@
     "name": "Wedding Peach Camera",
     "slug": "wedding-peach-camera",
     "version": "0.1.0",
+    "icon": "./assets/icon-candidate-shoujo.png",
     "orientation": "portrait",
     "scheme": "weddingpeachcamera",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "image": "./assets/splash-shoujo.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#2b075d"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
@@ -24,7 +26,8 @@
     "android": {
       "package": "com.weddingpeach.camera",
       "adaptiveIcon": {
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/icon-candidate-shoujo.png",
+        "backgroundColor": "#2b075d"
       },
       "permissions": [
         "android.permission.CAMERA",
@@ -36,6 +39,14 @@
       "bundler": "metro"
     },
     "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-shoujo.png",
+          "resizeMode": "cover",
+          "backgroundColor": "#2b075d"
+        }
+      ],
       [
         "expo-camera",
         {
