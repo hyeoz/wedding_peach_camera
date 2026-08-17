@@ -17,7 +17,16 @@ import { PillButton } from '@/components/PillButton';
 import { TopBar } from '@/components/TopBar';
 import { useSession } from '@/context/SessionContext';
 import type { RootStackParamList } from '@/navigation/types';
-import { fonts, spacing, useTheme, useThemedStyles, type ThemeColors } from '@/theme';
+import {
+  fonts,
+  gridCellWidth,
+  spacing,
+  useContentBounds,
+  useResponsive,
+  useTheme,
+  useThemedStyles,
+  type ThemeColors,
+} from '@/theme';
 import { loadRecentPhotos, pickImageFromLibrary, resolveAssetUri } from '@/utils/media';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Gallery'>;
@@ -25,6 +34,9 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Gallery'>;
 export function GalleryScreen({ navigation }: Props) {
   const colors = useTheme();
   const styles = useThemedStyles(makeStyles);
+  const bounds = useContentBounds();
+  const { contentWidth, gridColumns, gutter } = useResponsive();
+  const cellWidth = gridCellWidth(contentWidth, gridColumns, spacing.sm, gutter);
   const { setPhoto, clearPlacedItems } = useSession();
   const [assets, setAssets] = useState<MediaLibrary.Asset[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,7 +82,7 @@ export function GalleryScreen({ navigation }: Props) {
 
   return (
     <GradientBackground>
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <SafeAreaView style={[styles.container, bounds]} edges={['top', 'bottom']}>
         <TopBar title="갤러리에서 선택" onBack={() => navigation.goBack()} />
 
         {loading ? (
@@ -88,9 +100,9 @@ export function GalleryScreen({ navigation }: Props) {
             <PillButton label="사진 앱에서 선택" onPress={onPickNative} />
           </View>
         ) : (
-          <ScrollView contentContainerStyle={styles.grid}>
+          <ScrollView contentContainerStyle={[styles.grid, { paddingHorizontal: gutter }]}>
             {assets.map((a) => (
-              <Pressable key={a.id} style={styles.cell} onPress={() => onPick(a)}>
+              <Pressable key={a.id} style={{ width: cellWidth }} onPress={() => onPick(a)}>
                 <Image source={{ uri: a.uri }} style={styles.photo} />
               </Pressable>
             ))}
@@ -124,14 +136,11 @@ const makeStyles = (colors: ThemeColors) =>
     textAlign: 'center',
   },
   grid: {
+    // paddingHorizontal은 화면 크기에 따라 런타임에 주입 (gutter)
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xl,
     gap: spacing.sm,
-  },
-  cell: {
-    width: `${(100 - 4) / 3}%`,
   },
   photo: {
     width: '100%',

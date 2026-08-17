@@ -5,7 +5,7 @@
  * 항목 메타데이터(id/이름/파일 URI)는 AsyncStorage에 저장한다.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 
 import type { LibraryItem, UserLibraryMode } from '@/data/library';
 

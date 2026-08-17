@@ -22,7 +22,18 @@ import { useSession } from '@/context/SessionContext';
 import { useUserLibrary } from '@/context/UserLibraryContext';
 import { modeLabel, modeTitle, sourceForItem, type LibraryItem } from '@/data/library';
 import type { RootStackParamList } from '@/navigation/types';
-import { fonts, radius, shadow, spacing, useTheme, useThemedStyles, type ThemeColors } from '@/theme';
+import {
+  fonts,
+  gridCellWidth,
+  radius,
+  shadow,
+  spacing,
+  useContentBounds,
+  useResponsive,
+  useTheme,
+  useThemedStyles,
+  type ThemeColors,
+} from '@/theme';
 import { pickImageFromLibrary } from '@/utils/media';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Select'>;
@@ -30,6 +41,9 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Select'>;
 export function SelectScreen({ navigation }: Props) {
   const colors = useTheme();
   const styles = useThemedStyles(makeStyles);
+  const bounds = useContentBounds();
+  const { contentWidth, gridColumns, gutter, modalMaxWidth } = useResponsive();
+  const cellWidth = gridCellWidth(contentWidth, gridColumns, COLUMN_GAP, gutter);
   const {
     mode,
     selectedFrameId,
@@ -136,7 +150,7 @@ export function SelectScreen({ navigation }: Props) {
 
   return (
     <GradientBackground>
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <SafeAreaView style={[styles.container, bounds]} edges={['top', 'bottom']}>
         <TopBar title={modeTitle(mode)} onBack={() => navigation.navigate('Home')} />
 
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
@@ -199,12 +213,12 @@ export function SelectScreen({ navigation }: Props) {
                   <Text style={styles.emptyHint}>위의 등록 버튼으로 첫 항목을 추가해 보세요</Text>
                 </View>
               ) : (
-                <View style={styles.grid}>
+                <View style={[styles.grid, { paddingHorizontal: gutter }]}>
                   {items.map((item) => {
                     const selected = isSelected(item.id);
                     const isFav = favIds.includes(item.id);
                     return (
-                      <View key={item.id} style={styles.cell}>
+                      <View key={item.id} style={{ width: cellWidth }}>
                         <Pressable onPress={() => onSelect(item.id)}>
                           <Thumb
                             emoji={item.emoji}
@@ -267,7 +281,7 @@ export function SelectScreen({ navigation }: Props) {
           onRequestClose={closeRegistration}
         >
           <Pressable style={styles.modalBackdrop} onPress={closeRegistration}>
-            <Pressable style={styles.modalCard} onPress={() => {}}>
+            <Pressable style={[styles.modalCard, { maxWidth: modalMaxWidth }]} onPress={() => {}}>
               <Text style={styles.modalTitle}>새 {modeLabel(mode)} 등록</Text>
               {draftUri ? (
                 <Thumb
@@ -407,13 +421,10 @@ const makeStyles = (colors: ThemeColors) =>
       marginTop: spacing.xs,
     },
     grid: {
+      // paddingHorizontal은 화면 크기에 따라 런타임에 주입 (gutter)
       flexDirection: 'row',
       flexWrap: 'wrap',
-      paddingHorizontal: spacing.lg,
       gap: COLUMN_GAP,
-    },
-    cell: {
-      width: `${(100 - 4) / 3}%`,
     },
     thumb: {
       width: '100%',

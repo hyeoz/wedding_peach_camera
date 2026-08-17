@@ -26,7 +26,16 @@ import { useUserLibrary } from '@/context/UserLibraryContext';
 import { sourceForItem } from '@/data/library';
 import type { RootStackParamList } from '@/navigation/types';
 import type { PlacedItem } from '@/types';
-import { fonts, radius, spacing, useTheme, useThemedStyles, type ThemeColors } from '@/theme';
+import {
+  fonts,
+  radius,
+  spacing,
+  useContentBounds,
+  useResponsive,
+  useTheme,
+  useThemedStyles,
+  type ThemeColors,
+} from '@/theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Edit'>;
 
@@ -53,6 +62,8 @@ export function EditScreen({ navigation }: Props) {
   const { getItem } = useUserLibrary();
   const colors = useTheme();
   const styles = useThemedStyles(makeStyles);
+  const bounds = useContentBounds();
+  const { modalMaxWidth } = useResponsive();
 
   const shotRef = useRef<ViewShot>(null);
   const canvasRef = useRef<View>(null);
@@ -136,7 +147,7 @@ export function EditScreen({ navigation }: Props) {
 
   return (
     <GradientBackground>
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <SafeAreaView style={[styles.container, bounds]} edges={['top', 'bottom']}>
         <TopBar title="편집" centered onBack={() => navigation.goBack()} />
 
         <ViewShot ref={shotRef} options={{ format: 'png', quality: 1 }} style={styles.shot}>
@@ -150,7 +161,7 @@ export function EditScreen({ navigation }: Props) {
               source={{ uri: photo.uri }}
               resizeMode="cover"
               borderRadius={0}
-              style={StyleSheet.absoluteFillObject}
+              style={StyleSheet.absoluteFill}
             />
 
             {mode === 'frame' ? (
@@ -207,7 +218,7 @@ export function EditScreen({ navigation }: Props) {
         {/* 특이사항/메모 입력 모달 */}
         <Modal visible={!!noteEdit} transparent animationType="fade" onRequestClose={() => setNoteEdit(null)}>
           <Pressable style={styles.modalBackdrop} onPress={() => setNoteEdit(null)}>
-            <Pressable style={styles.modalCard} onPress={() => {}}>
+            <Pressable style={[styles.modalCard, { maxWidth: modalMaxWidth }]} onPress={() => {}}>
               <Text style={styles.modalTitle}>내용 입력</Text>
               <TextInput
                 value={noteValue}

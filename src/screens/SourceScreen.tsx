@@ -10,13 +10,24 @@ import { useSession } from '@/context/SessionContext';
 import { useUserLibrary } from '@/context/UserLibraryContext';
 import { modeLabel } from '@/data/library';
 import type { RootStackParamList } from '@/navigation/types';
-import { fonts, radius, spacing, useTheme, useThemedStyles, type ThemeColors } from '@/theme';
+import {
+  fonts,
+  radius,
+  spacing,
+  useContentBounds,
+  useResponsive,
+  useTheme,
+  useThemedStyles,
+  type ThemeColors,
+} from '@/theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Source'>;
 
 export function SourceScreen({ navigation }: Props) {
   const colors = useTheme();
   const styles = useThemedStyles(makeStyles);
+  const bounds = useContentBounds();
+  const { isTablet } = useResponsive();
   const { mode, selectedFrameId, selectedItemIds } = useSession();
   const { getItem } = useUserLibrary();
 
@@ -30,7 +41,7 @@ export function SourceScreen({ navigation }: Props) {
 
   return (
     <GradientBackground>
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <SafeAreaView style={[styles.container, bounds]} edges={['top', 'bottom']}>
         <TopBar title="사진 가져오기" onBack={() => navigation.goBack()} />
 
         <View style={styles.body}>
@@ -38,7 +49,7 @@ export function SourceScreen({ navigation }: Props) {
             선택한 {modeLabel(mode)}: <Text style={styles.summaryValue}>{summary}</Text>
           </Text>
 
-          <View style={styles.buttons}>
+          <View style={[styles.buttons, isTablet && styles.buttonsTablet]}>
             <Pressable
               onPress={() => navigation.navigate('Capture')}
               style={({ pressed }) => [styles.btn, { backgroundColor: colors.primary }, pressed && styles.pressed]}
@@ -84,6 +95,11 @@ const makeStyles = (colors: ThemeColors) =>
   buttons: {
     gap: spacing.lg,
     marginTop: spacing.sm,
+  },
+  buttonsTablet: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingBottom: spacing.xxl * 3,
   },
   btn: {
     flexDirection: 'row',

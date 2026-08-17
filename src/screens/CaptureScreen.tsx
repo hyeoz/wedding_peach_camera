@@ -9,13 +9,29 @@ import { ChevronLeft } from '@/components/Icons';
 import { PillButton } from '@/components/PillButton';
 import { useSession } from '@/context/SessionContext';
 import type { RootStackParamList } from '@/navigation/types';
-import { fonts, spacing, useThemedStyles, type ThemeColors } from '@/theme';
+import {
+  fonts,
+  spacing,
+  useContentBounds,
+  useResponsive,
+  useThemedStyles,
+  type ThemeColors,
+} from '@/theme';
 import { pickImageFromLibrary } from '@/utils/media';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Capture'>;
 
 export function CaptureScreen({ navigation }: Props) {
   const styles = useThemedStyles(makeStyles);
+  const bounds = useContentBounds();
+  const { width, height, isTablet } = useResponsive();
+  // 프레임 가이드는 하드코딩 대신 화면 크기에 비례시켜 iPad에서도 구도가 맞게 한다.
+  const guideInset = {
+    left: Math.round(width * (isTablet ? 0.12 : 0.06)),
+    right: Math.round(width * (isTablet ? 0.12 : 0.06)),
+    top: Math.round(height * 0.11),
+    bottom: Math.round(height * 0.17),
+  };
   const { mode, setPhoto, clearPlacedItems } = useSession();
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState<CameraType>('back');
@@ -63,7 +79,7 @@ export function CaptureScreen({ navigation }: Props) {
   if (!permission.granted) {
     return (
       <GradientBackground>
-        <SafeAreaView style={styles.permission}>
+        <SafeAreaView style={[styles.permission, bounds]}>
           <Text style={styles.permissionText}>
             촬영을 위해 카메라 권한이 필요해요.{'\n'}권한 없이 갤러리에서 불러올 수도 있어요.
           </Text>
@@ -86,7 +102,9 @@ export function CaptureScreen({ navigation }: Props) {
       <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing={facing} />
 
       {/* 프레임 모드: 반투명 흰 테두리 가이드 */}
-      {mode === 'frame' ? <View pointerEvents="none" style={styles.frameGuide} /> : null}
+      {mode === 'frame' ? (
+        <View pointerEvents="none" style={[styles.frameGuide, guideInset]} />
+      ) : null}
 
       <SafeAreaView style={styles.topBar} edges={['top']}>
         <Pressable style={styles.roundBtn} onPress={() => navigation.goBack()}>
@@ -122,11 +140,8 @@ const makeStyles = (colors: ThemeColors) =>
     backgroundColor: '#111',
   },
   frameGuide: {
+    // top/bottom/left/right는 화면 크기에 따라 런타임에 주입
     position: 'absolute',
-    top: 90,
-    bottom: 140,
-    left: 24,
-    right: 24,
     borderWidth: 10,
     borderColor: 'rgba(255,255,255,0.7)',
     borderRadius: 20,

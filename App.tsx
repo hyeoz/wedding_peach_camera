@@ -1,10 +1,11 @@
-// 사용하는 굵기의 .ttf만 직접 import 해 번들 용량을 줄인다.
-import Gaegu_700Bold from '@expo-google-fonts/gaegu/Gaegu_700Bold.ttf';
-import Jua_400Regular from '@expo-google-fonts/jua/Jua_400Regular.ttf';
-import Poppins_400Regular from '@expo-google-fonts/poppins/Poppins_400Regular.ttf';
-import Poppins_500Medium from '@expo-google-fonts/poppins/Poppins_500Medium.ttf';
-import Poppins_600SemiBold from '@expo-google-fonts/poppins/Poppins_600SemiBold.ttf';
-import Poppins_700Bold from '@expo-google-fonts/poppins/Poppins_700Bold.ttf';
+// 사용하는 굵기만 굵기별 서브패스로 import 해 번들 용량을 줄인다.
+// (@expo-google-fonts v0.4부터 `<패키지>/<굵기>` 경로로 변경됨)
+import { Gaegu_700Bold } from '@expo-google-fonts/gaegu/700Bold';
+import { Jua_400Regular } from '@expo-google-fonts/jua/400Regular';
+import { Poppins_400Regular } from '@expo-google-fonts/poppins/400Regular';
+import { Poppins_500Medium } from '@expo-google-fonts/poppins/500Medium';
+import { Poppins_600SemiBold } from '@expo-google-fonts/poppins/600SemiBold';
+import { Poppins_700Bold } from '@expo-google-fonts/poppins/700Bold';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';

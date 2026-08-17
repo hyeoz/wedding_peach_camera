@@ -38,7 +38,11 @@ export function FrameOverlay({ frame, showLabel = true }: FrameOverlayProps) {
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
   border: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     borderWidth: 16,
     borderColor: colors.primary,
     borderRadius: radius.canvas,

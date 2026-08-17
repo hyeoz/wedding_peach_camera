@@ -8,6 +8,10 @@ web-build/
 expo-env.d.ts
 
 # Native
+# expo prebuild / run:ios 가 생성하는 네이티브 프로젝트 (재생성 가능)
+/ios
+/android
+
 *.orig.*
 *.jks
 *.p8
@@ -28,7 +32,10 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
 .env*.local
+# 릴리스 시크릿 (ASC API 키 ID/Issuer/경로) — 절대 커밋 금지
+.env.release
 
 # typescript
 *.tsbuildinfo

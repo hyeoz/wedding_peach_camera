@@ -8,7 +8,15 @@ import { PillButton } from '@/components/PillButton';
 import { TopBar } from '@/components/TopBar';
 import { PROFILE_EMOJIS, useProfile } from '@/context/ProfileContext';
 import type { RootStackParamList } from '@/navigation/types';
-import { fonts, radius, spacing, useTheme, useThemedStyles, type ThemeColors } from '@/theme';
+import {
+  fonts,
+  radius,
+  spacing,
+  useContentBounds,
+  useTheme,
+  useThemedStyles,
+  type ThemeColors,
+} from '@/theme';
 import { paletteForEmoji } from '@/theme/palettes';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Profile'>;
@@ -16,6 +24,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Profile'>;
 export function ProfileScreen({ navigation }: Props) {
   const colors = useTheme();
   const styles = useThemedStyles(makeStyles);
+  const bounds = useContentBounds();
   const { profile, saveProfile } = useProfile();
   const [nickname, setNickname] = useState(profile.nickname);
   const [emoji, setEmoji] = useState(profile.emoji);
@@ -28,7 +37,7 @@ export function ProfileScreen({ navigation }: Props) {
 
   return (
     <GradientBackground>
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <SafeAreaView style={[styles.container, bounds]} edges={['top', 'bottom']}>
         <TopBar title="내 프로필" onBack={() => navigation.goBack()} />
 
         <View style={styles.body}>

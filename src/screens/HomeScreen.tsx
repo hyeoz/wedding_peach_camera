@@ -9,7 +9,17 @@ import { useProfile } from '@/context/ProfileContext';
 import { useSession } from '@/context/SessionContext';
 import type { OverlayMode } from '@/data/library';
 import type { RootStackParamList } from '@/navigation/types';
-import { fonts, radius, shadow, spacing, useTheme, useThemedStyles, type ThemeColors } from '@/theme';
+import {
+  fonts,
+  radius,
+  shadow,
+  spacing,
+  useContentBounds,
+  useResponsive,
+  useTheme,
+  useThemedStyles,
+  type ThemeColors,
+} from '@/theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
@@ -26,6 +36,8 @@ interface ModeCard {
 export function HomeScreen({ navigation }: Props) {
   const colors = useTheme();
   const styles = useThemedStyles(makeStyles);
+  const bounds = useContentBounds();
+  const { isTablet } = useResponsive();
   const { setMode, reset } = useSession();
   const { profile, hasProfile } = useProfile();
 
@@ -69,7 +81,7 @@ export function HomeScreen({ navigation }: Props) {
 
   return (
     <GradientBackground>
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, bounds]}>
         {/* 프로필 칩 */}
         <Pressable
           onPress={() => navigation.navigate('Profile')}
@@ -93,7 +105,7 @@ export function HomeScreen({ navigation }: Props) {
           <Text style={styles.subtitle}>프레임 · 스티커 · 텍스트로 사진을 꾸며요</Text>
         </View>
 
-        <View style={styles.cards}>
+        <View style={[styles.cards, isTablet && styles.cardsTablet]}>
           {cards.map((c) => (
             <Pressable
               key={c.mode}
@@ -176,6 +188,12 @@ const makeStyles = (colors: ThemeColors) =>
   },
   cards: {
     gap: spacing.md,
+  },
+  // 태블릿: 남는 세로 공간에 카드를 중앙 배치해 상단 쏠림을 없앤다.
+  cardsTablet: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingBottom: spacing.xxl * 2,
   },
   card: {
     borderRadius: radius.card,

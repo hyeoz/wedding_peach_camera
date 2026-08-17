@@ -7,7 +7,15 @@ import { DownloadIcon, RefreshIcon, ShareIcon } from '@/components/Icons';
 import { GradientBackground } from '@/components/GradientBackground';
 import { useSession } from '@/context/SessionContext';
 import type { RootStackParamList } from '@/navigation/types';
-import { fonts, radius, spacing, useTheme, useThemedStyles, type ThemeColors } from '@/theme';
+import {
+  fonts,
+  radius,
+  spacing,
+  useContentBounds,
+  useTheme,
+  useThemedStyles,
+  type ThemeColors,
+} from '@/theme';
 import { saveToGallery, shareImage } from '@/utils/media';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Result'>;
@@ -20,6 +28,7 @@ interface Size {
 export function ResultScreen({ navigation }: Props) {
   const colors = useTheme();
   const styles = useThemedStyles(makeStyles);
+  const bounds = useContentBounds();
   const { resultUri } = useSession();
   const [toast, setToast] = useState('');
   const [saving, setSaving] = useState(false);
@@ -121,7 +130,7 @@ export function ResultScreen({ navigation }: Props) {
 
   return (
     <GradientBackground>
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <SafeAreaView style={[styles.container, bounds]} edges={['top', 'bottom']}>
         <Text style={styles.title}>완성됐어요!</Text>
 
         <View
