@@ -20,13 +20,11 @@
       }
     },
     "device": {
-      "//": "실기기에 설치하는 개발 빌드. simulator 빌드는 실기기에 설치할 수 없어 프로필을 분리한다.",
       "extends": "base",
       "developmentClient": true,
       "distribution": "internal"
     },
     "preview": {
-      "//": "TestFlight 전, 테스터에게 배포해 보는 릴리스 구성 빌드.",
       "extends": "base",
       "distribution": "internal",
       "ios": {

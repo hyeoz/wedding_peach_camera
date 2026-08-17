@@ -12,23 +12,29 @@ function runEas(args) {
   });
 
   if (result.status !== 0) {
-    process.stderr.write(result.stderr || result.stdout);
+    // EAS는 원인을 stdout에, 일반화된 실패 문구를 stderr에 나눠 쓰는 경우가 있다.
+    // 하나만 출력하면 진짜 이유가 잘리므로 둘 다 보여준다.
+    process.stderr.write([result.stdout, result.stderr].filter(Boolean).join("\n"));
+    process.stderr.write("\n(실패한 명령: eas " + args.join(" ") + ")\n");
     process.exit(result.status ?? 1);
   }
 
   return result.stdout;
 }
 
+// EXPO_TOKEN 으로 인증하면 whoami 가 "hyeoz (authenticated using EXPO_TOKEN)" 를 출력한다.
+// 괄호 주석을 떼어내야 계정명만 비교할 수 있다.
 const signedInOwner = runEas(['whoami'])
   .split(/\r?\n/)
   .map((line) => line.trim())
-  .find(Boolean);
+  .find(Boolean)
+  ?.replace(/\s*\(.*\)\s*$/, "");
 
 if (signedInOwner !== expectedOwner) {
   console.error(
     `EAS account mismatch: expected ${expectedOwner}, but found ${signedInOwner ?? 'no login'}.`,
   );
-  console.error('Run `eas login --browser` and choose the hyeoz account before releasing.');
+  console.error('`eas login --browser` 로 hyeoz 계정에 로그인하거나, EXPO_TOKEN 을 설정하세요.');
   process.exit(1);
 }
 
