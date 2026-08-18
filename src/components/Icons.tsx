@@ -127,22 +127,24 @@ export function ShareIcon({ size = 18, color = '#3a1030' }: IconProps) {
   );
 }
 
-export function RefreshIcon({ size = 16, color = '#b31877' }: IconProps) {
+export function HomeIcon({ size = 16, color = '#b31877' }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path
-        d="M4 4v5h5M20 20v-5h-5"
+        d="M3.5 10.5L12 4l8.5 6.5V19a1.5 1.5 0 01-1.5 1.5H5A1.5 1.5 0 013.5 19v-8.5z"
         stroke={color}
         strokeWidth={2.4}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <Path
-        d="M5.5 9a7 7 0 0112-4M18.5 15a7 7 0 01-12 4"
+        d="M9.5 20.5V14h5v6.5"
         stroke={color}
         strokeWidth={2.4}
         strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </Svg>
   );
 }
+

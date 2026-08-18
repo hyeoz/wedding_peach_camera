@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { DownloadIcon, RefreshIcon, ShareIcon } from '@/components/Icons';
+import { DownloadIcon, HomeIcon, ShareIcon } from '@/components/Icons';
 import { GradientBackground } from '@/components/GradientBackground';
 import { useSession } from '@/context/SessionContext';
 import type { RootStackParamList } from '@/navigation/types';
@@ -29,7 +29,7 @@ export function ResultScreen({ navigation }: Props) {
   const colors = useTheme();
   const styles = useThemedStyles(makeStyles);
   const bounds = useContentBounds();
-  const { resultUri } = useSession();
+  const { resultUri, reset } = useSession();
   const [toast, setToast] = useState('');
   const [saving, setSaving] = useState(false);
   const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
@@ -119,6 +119,15 @@ export function ResultScreen({ navigation }: Props) {
     }
   };
 
+  /**
+   * 한 번의 꾸미기 흐름이 여기서 끝나므로, 홈으로 돌아갈 때 편집 세션을 비운다.
+   * 그러지 않으면 사진·배치한 스티커·프레임 선택이 다음 촬영까지 따라온다.
+   */
+  const handleGoHome = () => {
+    reset();
+    navigation.popToTop();
+  };
+
   const handleShare = async () => {
     if (!resultUri) return;
     try {
@@ -162,9 +171,15 @@ export function ResultScreen({ navigation }: Props) {
           </Pressable>
         </View>
 
-        <Pressable style={styles.retake} onPress={() => navigation.navigate('Source')}>
-          <RefreshIcon color={colors.primaryDeep} />
-          <Text style={styles.retakeLabel}>바로 다시 촬영</Text>
+        {/* 결과 화면은 흐름의 끝이므로 스택을 쌓지 않고 첫 화면(Home)으로 되돌린다. */}
+        <Pressable
+          style={styles.home}
+          accessibilityRole="button"
+          accessibilityLabel="메인 화면으로 돌아가기"
+          onPress={handleGoHome}
+        >
+          <HomeIcon color={colors.primaryDeep} />
+          <Text style={styles.homeLabel}>메인 화면으로</Text>
         </Pressable>
 
         {toast ? (
@@ -247,14 +262,14 @@ const makeStyles = (colors: ThemeColors) =>
   pressed: {
     opacity: 0.85,
   },
-  retake: {
+  home: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
     paddingVertical: spacing.md,
   },
-  retakeLabel: {
+  homeLabel: {
     fontFamily: fonts.title,
     fontSize: 14,
     color: colors.primaryDeep,

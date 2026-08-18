@@ -57,6 +57,7 @@ export function EditScreen({ navigation }: Props) {
     deletePlacedItem,
     setActiveItem,
     setResultUri,
+    reset,
   } = useSession();
   const { profile } = useProfile();
   const { getItem } = useUserLibrary();
@@ -90,7 +91,14 @@ export function EditScreen({ navigation }: Props) {
       <GradientBackground>
         <SafeAreaView style={styles.center}>
           <Text style={styles.hint}>편집할 사진이 없어요.</Text>
-          <PillButton label="처음으로" onPress={() => navigation.popToTop()} />
+          {/* 사진 없이 여기까지 온 건 세션이 어긋난 상태다. 남은 선택·배치를 비우고 처음으로 보낸다. */}
+          <PillButton
+            label="처음으로"
+            onPress={() => {
+              reset();
+              navigation.popToTop();
+            }}
+          />
         </SafeAreaView>
       </GradientBackground>
     );
