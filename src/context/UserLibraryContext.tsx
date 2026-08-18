@@ -1,4 +1,4 @@
-/** 사용자가 등록한 프레임/스티커 목록과 이미지 파일을 관리한다. */
+/** 사용자가 등록한 프레임/스티커 이미지와 텍스트 템플릿을 관리한다. */
 import React, {
   createContext,
   useCallback,
@@ -10,10 +10,17 @@ import React, {
 
 import {
   getBuiltInItems,
+  type ImageLibraryMode,
   type LibraryItem,
   type OverlayMode,
   type UserLibraryMode,
 } from '@/data/library';
+import { parseTemplateSource } from '@/data/textTemplateParser';
+import {
+  DEFAULT_CARD_TINT,
+  findBuiltInTemplate,
+  type TextTemplate,
+} from '@/data/textTemplates';
 import {
   EMPTY_USER_LIBRARY,
   loadUserLibrary,
@@ -28,7 +35,10 @@ interface UserLibraryContextValue {
   ready: boolean;
   getItems: (mode: OverlayMode) => LibraryItem[];
   getItem: (mode: OverlayMode, id: string) => LibraryItem | undefined;
-  addItem: (mode: UserLibraryMode, label: string, sourceUri: string) => Promise<LibraryItem>;
+  /** 텍스트 카드 렌더에 쓰는 템플릿 조회 (내장 + 사용자 등록). */
+  getTemplate: (id: string) => TextTemplate | undefined;
+  addItem: (mode: ImageLibraryMode, label: string, sourceUri: string) => Promise<LibraryItem>;
+  addTextItem: (label: string, templateSource: string, tint: string) => Promise<LibraryItem>;
   removeItem: (mode: UserLibraryMode, id: string) => Promise<void>;
 }
 
@@ -45,7 +55,9 @@ export function UserLibraryProvider({ children }: { children: React.ReactNode })
   }, []);
 
   const getItems = useCallback(
-    (mode: OverlayMode) => (mode === 'text' ? getBuiltInItems('text') : items[mode]),
+    (mode: OverlayMode) =>
+      // 텍스트만 내장 항목이 있어서 사용자 등록분을 뒤에 이어 붙인다.
+      mode === 'text' ? [...getBuiltInItems('text'), ...items.text] : items[mode],
     [items],
   );
 
@@ -54,8 +66,32 @@ export function UserLibraryProvider({ children }: { children: React.ReactNode })
     [getItems],
   );
 
+  /**
+   * 저장된 것은 DSL 원문이므로 조회 시점에 컴파일한다.
+   * 카드 한 장을 그릴 때마다 파싱하지만 줄 수가 12줄 이하라 비용이 미미하고,
+   * 파서가 개선되면 저장 데이터를 건드리지 않고도 결과가 따라 좋아진다.
+   */
+  const getTemplate = useCallback(
+    (id: string): TextTemplate | undefined => {
+      const builtIn = findBuiltInTemplate(id);
+      if (builtIn) return builtIn;
+
+      const item = items.text.find((entry) => entry.id === id);
+      if (!item?.templateSource) return undefined;
+
+      const { template } = parseTemplateSource(item.templateSource, {
+        id: item.id,
+        label: item.label,
+        tint: item.tint ?? DEFAULT_CARD_TINT,
+        emoji: item.emoji,
+      });
+      return template ?? undefined;
+    },
+    [items.text],
+  );
+
   const addItem = useCallback(
-    async (mode: UserLibraryMode, label: string, sourceUri: string) => {
+    async (mode: ImageLibraryMode, label: string, sourceUri: string) => {
       const id = `${mode}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const uri = await persistLibraryImage(sourceUri, id);
       const item: LibraryItem = {
@@ -77,6 +113,29 @@ export function UserLibraryProvider({ children }: { children: React.ReactNode })
     [items],
   );
 
+  const addTextItem = useCallback(
+    async (label: string, templateSource: string, tint: string) => {
+      const id = `text-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+      // 저장 전에 컴파일해 본다. 깨진 템플릿이 목록에 남지 않게 하기 위함.
+      const { errors } = parseTemplateSource(templateSource, { id, label, tint });
+      if (errors.length > 0) throw new Error(errors[0]);
+
+      const item: LibraryItem = {
+        id,
+        label: label.trim(),
+        emoji: '📝',
+        templateSource,
+        tint,
+      };
+      const next = { ...items, text: [...items.text, item] };
+      await saveUserLibrary(next);
+      setItems(next);
+      return item;
+    },
+    [items],
+  );
+
   const removeItem = useCallback(
     async (mode: UserLibraryMode, id: string) => {
       const target = items[mode].find((item) => item.id === id);
@@ -89,8 +148,8 @@ export function UserLibraryProvider({ children }: { children: React.ReactNode })
   );
 
   const value = useMemo<UserLibraryContextValue>(
-    () => ({ items, ready, getItems, getItem, addItem, removeItem }),
-    [items, ready, getItems, getItem, addItem, removeItem],
+    () => ({ items, ready, getItems, getItem, getTemplate, addItem, addTextItem, removeItem }),
+    [items, ready, getItems, getItem, getTemplate, addItem, addTextItem, removeItem],
   );
 
   return <UserLibraryContext.Provider value={value}>{children}</UserLibraryContext.Provider>;

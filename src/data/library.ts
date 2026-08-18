@@ -11,7 +11,10 @@ import type { ImageSourcePropType } from 'react-native';
 import { TEXT_TEMPLATES } from '@/data/textTemplates';
 
 export type OverlayMode = 'frame' | 'sticker' | 'text';
-export type UserLibraryMode = Exclude<OverlayMode, 'text'>;
+/** 사용자가 직접 등록할 수 있는 모드. 세 모드 모두 등록형이다. */
+export type UserLibraryMode = OverlayMode;
+/** 이미지를 등록하는 모드 (텍스트는 이미지가 아니라 DSL 원문을 등록한다). */
+export type ImageLibraryMode = Exclude<OverlayMode, 'text'>;
 
 export interface LibraryItem {
   id: string;
@@ -22,6 +25,12 @@ export interface LibraryItem {
   source?: ImageSourcePropType;
   /** 사용자가 등록해 앱 문서 디렉터리에 복사된 이미지 URI. */
   uri?: string;
+  /** 텍스트 모드 전용 — 사용자가 입력한 템플릿 DSL 원문. */
+  templateSource?: string;
+  /** 텍스트 모드 전용 — 카드 배경색. */
+  tint?: string;
+  /** 앱에 내장된 항목이면 true. 내장 항목은 삭제할 수 없다. */
+  builtIn?: boolean;
 }
 
 /** 화면 상단 타이틀. */
@@ -36,7 +45,12 @@ export function modeLabel(mode: OverlayMode): string {
 /** 앱에 내장된 항목. 프레임/스티커는 사용자 등록형이므로 텍스트만 내장한다. */
 export function getBuiltInItems(mode: OverlayMode): LibraryItem[] {
   if (mode !== 'text') return [];
-  return TEXT_TEMPLATES.map((t) => ({ id: t.id, label: t.label, emoji: t.emoji }));
+  return TEXT_TEMPLATES.map((t) => ({
+    id: t.id,
+    label: t.label,
+    emoji: t.emoji,
+    builtIn: true,
+  }));
 }
 
 export function sourceForItem(item: LibraryItem | undefined): ImageSourcePropType | undefined {

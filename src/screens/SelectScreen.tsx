@@ -21,6 +21,17 @@ import { TopBar } from '@/components/TopBar';
 import { useSession } from '@/context/SessionContext';
 import { useUserLibrary } from '@/context/UserLibraryContext';
 import { modeLabel, modeTitle, sourceForItem, type LibraryItem } from '@/data/library';
+import {
+  CHOICE_SEPARATOR,
+  TEMPLATE_EXAMPLE,
+  TOKEN_DATE,
+  TOKEN_INPUT,
+  TOKEN_NICKNAME,
+  parseTemplateSource,
+} from '@/data/textTemplateParser';
+import { CARD_TINTS, DEFAULT_CARD_TINT } from '@/data/textTemplates';
+import { TextCard } from '@/components/TextCard';
+import { useProfile } from '@/context/ProfileContext';
 import type { RootStackParamList } from '@/navigation/types';
 import {
   fonts,
@@ -54,17 +65,32 @@ export function SelectScreen({ navigation }: Props) {
     toggleFavorite,
     forgetLibraryItem,
   } = useSession();
-  const { ready, getItems, addItem, removeItem } = useUserLibrary();
+  const { ready, getItems, addItem, addTextItem, removeItem } = useUserLibrary();
+  const { profile } = useProfile();
 
   const [draftUri, setDraftUri] = useState<string | null>(null);
   const [draftName, setDraftName] = useState('');
   const [picking, setPicking] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // 텍스트 템플릿 등록 상태
+  const [textDraftOpen, setTextDraftOpen] = useState(false);
+  const [textSource, setTextSource] = useState(TEMPLATE_EXAMPLE);
+  const [textTint, setTextTint] = useState<string>(DEFAULT_CARD_TINT);
+
   const items = getItems(mode);
   const favIds = favorites[mode];
   const isFrame = mode === 'frame';
-  const userMode = mode === 'text' ? null : mode;
+  const isText = mode === 'text';
+  /** 이미지(프레임·스티커) 등록 모드. 텍스트는 별도 흐름이라 제외한다. */
+  const imageMode = isText ? null : mode;
+
+  // 입력하는 동안 실시간으로 컴파일해 미리보기와 오류를 함께 보여준다.
+  const textPreview = parseTemplateSource(textSource, {
+    id: 'preview',
+    label: draftName.trim() || '미리보기',
+    tint: textTint,
+  });
 
   const isSelected = (id: string) =>
     isFrame ? selectedFrameId === id : selectedItemIds.includes(id);
@@ -83,7 +109,7 @@ export function SelectScreen({ navigation }: Props) {
   };
 
   const beginRegistration = async () => {
-    if (!userMode || picking) return;
+    if (!imageMode || picking) return;
     try {
       setPicking(true);
       const image = await pickImageFromLibrary();
@@ -105,10 +131,10 @@ export function SelectScreen({ navigation }: Props) {
   };
 
   const confirmRegistration = async () => {
-    if (!userMode || !draftUri || !draftName.trim() || saving) return;
+    if (!imageMode || !draftUri || !draftName.trim() || saving) return;
     try {
       setSaving(true);
-      const item = await addItem(userMode, draftName, draftUri);
+      const item = await addItem(imageMode, draftName, draftUri);
       if (isFrame) selectFrame(item.id);
       else toggleItemChoice(item.id);
       setDraftUri(null);
@@ -120,8 +146,33 @@ export function SelectScreen({ navigation }: Props) {
     }
   };
 
+  const closeTextRegistration = () => {
+    if (saving) return;
+    setTextDraftOpen(false);
+    setTextSource(TEMPLATE_EXAMPLE);
+    setTextTint(DEFAULT_CARD_TINT);
+    setDraftName('');
+  };
+
+  const confirmTextRegistration = async () => {
+    if (!draftName.trim() || textPreview.errors.length > 0 || saving) return;
+    try {
+      setSaving(true);
+      const item = await addTextItem(draftName, textSource, textTint);
+      toggleItemChoice(item.id);
+      setTextDraftOpen(false);
+      setTextSource(TEMPLATE_EXAMPLE);
+      setTextTint(DEFAULT_CARD_TINT);
+      setDraftName('');
+    } catch (error) {
+      Alert.alert('등록 실패', error instanceof Error ? error.message : '템플릿을 등록하지 못했습니다.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const deleteItem = (item: LibraryItem) => {
-    if (!userMode) return;
+    if (item.builtIn) return;
     Alert.alert(
       `${modeLabel(mode)} 삭제`,
       `“${item.label}” 항목을 삭제할까요?`,
@@ -132,8 +183,8 @@ export function SelectScreen({ navigation }: Props) {
           style: 'destructive',
           onPress: async () => {
             try {
-              await removeItem(userMode, item.id);
-              forgetLibraryItem(userMode, item.id);
+              await removeItem(mode, item.id);
+              forgetLibraryItem(mode, item.id);
             } catch (error) {
               Alert.alert(
                 '삭제 실패',
@@ -154,7 +205,7 @@ export function SelectScreen({ navigation }: Props) {
         <TopBar title={modeTitle(mode)} onBack={() => navigation.navigate('Home')} />
 
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          {userMode ? (
+          {imageMode ? (
             <View style={styles.registerSection}>
               <View style={styles.registerCopy}>
                 <Text style={styles.registerTitle}>내 {modeLabel(mode)} 만들기</Text>
@@ -168,6 +219,23 @@ export function SelectScreen({ navigation }: Props) {
                 onPress={beginRegistration}
                 variant="outline"
                 loading={picking}
+                style={styles.registerButton}
+              />
+            </View>
+          ) : null}
+
+          {isText ? (
+            <View style={styles.registerSection}>
+              <View style={styles.registerCopy}>
+                <Text style={styles.registerTitle}>내 텍스트 만들기</Text>
+                <Text style={styles.registerHint}>
+                  날짜·선택·입력 칸이 있는 나만의 카드를 직접 만들어요
+                </Text>
+              </View>
+              <PillButton
+                label="+ 텍스트 등록"
+                onPress={() => setTextDraftOpen(true)}
+                variant="outline"
                 style={styles.registerButton}
               />
             </View>
@@ -206,7 +274,7 @@ export function SelectScreen({ navigation }: Props) {
                 </View>
               ) : null}
 
-              {items.length === 0 && userMode ? (
+              {items.length === 0 && imageMode ? (
                 <View style={styles.empty}>
                   <Text style={styles.emptyEmoji}>{mode === 'frame' ? '🖼️' : '✨'}</Text>
                   <Text style={styles.emptyTitle}>아직 등록한 {modeLabel(mode)}이 없어요</Text>
@@ -232,7 +300,7 @@ export function SelectScreen({ navigation }: Props) {
                             </View>
                           ) : null}
                         </Pressable>
-                        {userMode ? (
+                        {imageMode ? (
                           <Pressable
                             accessibilityLabel={`${item.label} 삭제`}
                             style={styles.delete}
@@ -319,6 +387,103 @@ export function SelectScreen({ navigation }: Props) {
                   style={styles.flex1}
                 />
               </View>
+            </Pressable>
+          </Pressable>
+        </Modal>
+
+        {/* 텍스트 템플릿 등록 */}
+        <Modal
+          visible={textDraftOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={closeTextRegistration}
+        >
+          <Pressable style={styles.modalBackdrop} onPress={closeTextRegistration}>
+            <Pressable style={[styles.modalCard, { maxWidth: modalMaxWidth }]} onPress={() => {}}>
+              <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                <Text style={styles.modalTitle}>새 텍스트 등록</Text>
+
+                <Text style={styles.inputLabel}>이름</Text>
+                <TextInput
+                  value={draftName}
+                  onChangeText={setDraftName}
+                  placeholder="예: 나의 데일리 체크"
+                  placeholderTextColor={colors.textMuted}
+                  maxLength={24}
+                  returnKeyType="next"
+                  style={styles.input}
+                />
+
+                <Text style={styles.inputLabel}>내용</Text>
+                <Text style={styles.syntaxHint}>
+                  첫 줄은 카드 제목 · {TOKEN_NICKNAME} 닉네임 · {TOKEN_DATE} 오늘 날짜{'\n'}
+                  {`선택지는 ${CHOICE_SEPARATOR} 로 구분 (예: 식단 good ${CHOICE_SEPARATOR} bad)`}{'\n'}
+                  {`자유 입력 칸은 ${TOKEN_INPUT} (예: 특이사항 ${TOKEN_INPUT})`}
+                </Text>
+                <TextInput
+                  value={textSource}
+                  onChangeText={setTextSource}
+                  placeholder={TEMPLATE_EXAMPLE}
+                  placeholderTextColor={colors.textMuted}
+                  style={[styles.input, styles.sourceInput]}
+                  multiline
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+
+                <Text style={styles.inputLabel}>카드 색</Text>
+                <View style={styles.tintRow}>
+                  {CARD_TINTS.map((tint) => (
+                    <Pressable
+                      key={tint.id}
+                      accessibilityLabel={`${tint.label} 배경`}
+                      onPress={() => setTextTint(tint.value)}
+                      style={[
+                        styles.tintSwatch,
+                        { backgroundColor: tint.value },
+                        textTint === tint.value && styles.tintSwatchOn,
+                      ]}
+                    />
+                  ))}
+                </View>
+
+                <Text style={styles.inputLabel}>미리보기</Text>
+                {textPreview.template ? (
+                  <View style={styles.previewWrap}>
+                    <TextCard
+                      template={textPreview.template}
+                      nickname={profile.nickname}
+                      choices={{}}
+                      notes={{}}
+                    />
+                  </View>
+                ) : (
+                  <View style={styles.errorBox}>
+                    {textPreview.errors.map((error) => (
+                      <Text key={error} style={styles.errorText}>
+                        · {error}
+                      </Text>
+                    ))}
+                  </View>
+                )}
+
+                <View style={styles.modalButtons}>
+                  <PillButton
+                    label="취소"
+                    variant="outline"
+                    onPress={closeTextRegistration}
+                    disabled={saving}
+                    style={styles.flex1}
+                  />
+                  <PillButton
+                    label="등록"
+                    onPress={confirmTextRegistration}
+                    disabled={!draftName.trim() || textPreview.errors.length > 0}
+                    loading={saving}
+                    style={styles.flex1}
+                  />
+                </View>
+              </ScrollView>
             </Pressable>
           </Pressable>
         </Modal>
@@ -520,6 +685,52 @@ const makeStyles = (colors: ThemeColors) =>
       borderColor: colors.border,
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,
+    },
+    syntaxHint: {
+      fontFamily: fonts.body,
+      fontSize: 12,
+      lineHeight: 18,
+      color: colors.textMuted,
+      marginBottom: spacing.xs,
+    },
+    sourceInput: {
+      minHeight: 132,
+      textAlignVertical: 'top',
+      fontSize: 15,
+    },
+    tintRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+    },
+    tintSwatch: {
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+    },
+    tintSwatchOn: {
+      borderWidth: 3,
+      borderColor: colors.primary,
+    },
+    previewWrap: {
+      alignItems: 'center',
+      paddingVertical: spacing.sm,
+    },
+    errorBox: {
+      backgroundColor: colors.tintPink,
+      borderRadius: radius.thumb,
+      borderWidth: 1.5,
+      borderColor: colors.primary,
+      padding: spacing.md,
+      gap: 4,
+    },
+    errorText: {
+      fontFamily: fonts.body,
+      fontSize: 13,
+      lineHeight: 19,
+      color: colors.primaryDeep,
     },
     modalButtons: {
       flexDirection: 'row',

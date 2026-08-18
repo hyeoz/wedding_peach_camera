@@ -11,8 +11,8 @@ import Animated, {
 import { CloseIcon } from '@/components/Icons';
 import { TextCard } from '@/components/TextCard';
 import { Thumb } from '@/components/Thumb';
+import { useUserLibrary } from '@/context/UserLibraryContext';
 import { sourceForItem, type LibraryItem } from '@/data/library';
-import { findTemplate } from '@/data/textTemplates';
 import type { PlacedItem } from '@/types';
 import { useTheme, useThemedStyles, type ThemeColors } from '@/theme';
 
@@ -59,7 +59,9 @@ export function PlacedItemView({
 }: PlacedItemViewProps) {
   const colors = useTheme();
   const styles = useThemedStyles(makeStyles);
-  const template = item.kind === 'text' ? findTemplate(item.refId) : undefined;
+  const { getTemplate } = useUserLibrary();
+  // 사용자 등록 템플릿은 컨텍스트에만 있으므로 모듈 직접 조회로는 찾을 수 없다.
+  const template = item.kind === 'text' ? getTemplate(item.refId) : undefined;
 
   const tx = useSharedValue(item.x);
   const ty = useSharedValue(item.y);

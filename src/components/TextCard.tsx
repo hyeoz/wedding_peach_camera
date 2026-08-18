@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { TOKEN_DATE, TOKEN_NICKNAME } from '@/data/textTemplateParser';
 import type { TextTemplate } from '@/data/textTemplates';
 import { todayLabel } from '@/utils/date';
 import { fonts, radius, useTheme, useThemedStyles, type ThemeColors } from '@/theme';
@@ -31,12 +32,13 @@ export function TextCard({
 }: TextCardProps) {
   const colors = useTheme();
   const styles = useThemedStyles(makeStyles);
+  // 토큰은 여러 번 써도 모두 치환되도록 전역 치환한다.
   const header = template.headerTemplate
-    .replace('{nickname}', nickname || 'OOO')
-    .replace('{date}', todayLabel());
+    .replaceAll(TOKEN_NICKNAME, nickname || 'OOO')
+    .replaceAll(TOKEN_DATE, todayLabel());
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.tintPink }]}>
+    <View style={[styles.card, { backgroundColor: template.tint || colors.tintPink }]}>
       <Text style={styles.header}>
         {template.emoji} {header}
       </Text>
@@ -45,10 +47,10 @@ export function TextCard({
 
       {template.lines.map((line) => (
         <View key={line.key} style={styles.line}>
-          <Text style={styles.check}>✓</Text>
+          {line.type === 'static' ? null : <Text style={styles.check}>✓</Text>}
           <Text style={styles.label}>{line.label}</Text>
 
-          {line.type === 'choice' ? (
+          {line.type === 'static' ? null : line.type === 'choice' ? (
             <View style={styles.options}>
               {line.options?.map((opt, i) => {
                 const selected = choices[line.key] === opt;

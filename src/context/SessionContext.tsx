@@ -93,12 +93,19 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  /** 사용자 라이브러리에서 삭제된 항목을 현재 선택/즐겨찾기에서도 제거한다. */
+  /** 사용자 라이브러리에서 삭제된 항목을 현재 선택/즐겨찾기/캔버스에서도 제거한다. */
   const forgetLibraryItem = useCallback((itemMode: UserLibraryMode, id: string) => {
     if (itemMode === 'frame') {
       setSelectedFrameId((current) => (current === id ? null : current));
     } else {
       setSelectedItemIds((current) => current.filter((itemId) => itemId !== id));
+      // 캔버스에 이미 올려둔 항목도 같이 치운다. 남겨두면 원본이 사라져
+      // 스티커는 빈 칸으로, 텍스트 카드는 아예 렌더되지 않는 유령이 된다.
+      const orphanIds = placedItems.filter((placed) => placed.refId === id).map((p) => p.id);
+      if (orphanIds.length > 0) {
+        setPlacedItems((current) => current.filter((placed) => placed.refId !== id));
+        setActiveItemId((current) => (current && orphanIds.includes(current) ? null : current));
+      }
     }
     setFavorites((prev) => {
       if (!prev[itemMode].includes(id)) return prev;
@@ -106,7 +113,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       saveFavorites(next);
       return next;
     });
-  }, []);
+  }, [placedItems]);
 
   const addPlacedItem = useCallback(
     (refId: string) => {

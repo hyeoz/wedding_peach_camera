@@ -2,10 +2,12 @@
  * 텍스트 스티커 템플릿 (JSON 형식 정의).
  *
  * 사진 위에 붙이는 "다이어리 카드" 형태의 텍스트 스티커.
- * 헤더는 프로필 닉네임/오늘 날짜 플레이스홀더를 지원하고,
- * 각 줄은 good/bad 선택(choice) 또는 자유 메모(note)로 구성된다.
+ * 헤더는 프로필 닉네임/오늘 날짜 토큰을 지원하고,
+ * 각 줄은 선택(choice) · 자유 입력(note) · 정적 텍스트(static)로 구성된다.
  *
- * 새 템플릿을 추가하려면 이 배열에 JSON 객체만 추가하면 된다.
+ * 여기 배열은 앱에 내장된 기본 제공 템플릿이다.
+ * 사용자가 직접 만든 템플릿은 textTemplateParser 가 같은 모양으로 컴파일해
+ * UserLibraryContext 가 들고 있는다.
  */
 
 /** 카드의 한 줄. */
@@ -14,8 +16,8 @@ export interface TextLine {
   key: string;
   /** 앞에 붙는 라벨 (예: 식단, 운동, 특이사항). */
   label: string;
-  /** choice = 옵션 중 택1 토글, note = 자유 입력. */
-  type: 'choice' | 'note';
+  /** choice = 옵션 중 택1 토글, note = 자유 입력, static = 고정 텍스트. */
+  type: 'choice' | 'note' | 'static';
   /** choice일 때 선택지. */
   options?: string[];
 }
@@ -27,8 +29,8 @@ export interface TextTemplate {
   /** 썸네일/카드 헤더 이모지. */
   emoji: string;
   /**
-   * 헤더 문구. 플레이스홀더:
-   * {nickname} → 프로필 닉네임, {date} → 오늘 날짜.
+   * 헤더 문구. 토큰:
+   * {{nickname}} → 프로필 닉네임, {{date}} → 오늘 날짜.
    */
   headerTemplate: string;
   lines: TextLine[];
@@ -36,12 +38,24 @@ export interface TextTemplate {
   tint: string;
 }
 
+/** 카드 배경으로 고를 수 있는 색. 등록 화면의 색 선택지로도 쓴다. */
+export const CARD_TINTS = [
+  { id: 'pink', label: '핑크', value: '#fff2f8' },
+  { id: 'lavender', label: '라벤더', value: '#f3f0ff' },
+  { id: 'cream', label: '크림', value: '#fffaf0' },
+  { id: 'mint', label: '민트', value: '#eefbf4' },
+  { id: 'sky', label: '스카이', value: '#eef6ff' },
+  { id: 'white', label: '화이트', value: '#ffffff' },
+] as const;
+
+export const DEFAULT_CARD_TINT = CARD_TINTS[0].value;
+
 export const TEXT_TEMPLATES: TextTemplate[] = [
   {
     id: 't1',
     label: '데일리 체크',
     emoji: '📔',
-    headerTemplate: '{nickname}님의 {date}',
+    headerTemplate: '{{nickname}}님의 {{date}}',
     tint: '#fff2f8',
     lines: [
       { key: 'diet', label: '식단', type: 'choice', options: ['good', 'bad'] },
@@ -53,7 +67,7 @@ export const TEXT_TEMPLATES: TextTemplate[] = [
     id: 't2',
     label: '오늘 기분',
     emoji: '🌈',
-    headerTemplate: '{nickname}님의 {date}',
+    headerTemplate: '{{nickname}}님의 {{date}}',
     tint: '#f3f0ff',
     lines: [
       { key: 'mood', label: '기분', type: 'choice', options: ['good', 'soso', 'bad'] },
@@ -64,12 +78,13 @@ export const TEXT_TEMPLATES: TextTemplate[] = [
     id: 't3',
     label: '심플 날짜',
     emoji: '🗓️',
-    headerTemplate: '{nickname}님의 {date}',
+    headerTemplate: '{{nickname}}님의 {{date}}',
     tint: '#fffaf0',
     lines: [],
   },
 ];
 
-export function findTemplate(id: string): TextTemplate | undefined {
+/** 내장 템플릿 조회. 내장은 삭제할 수 없다(LibraryItem.builtIn 으로 구분). */
+export function findBuiltInTemplate(id: string): TextTemplate | undefined {
   return TEXT_TEMPLATES.find((t) => t.id === id);
 }
