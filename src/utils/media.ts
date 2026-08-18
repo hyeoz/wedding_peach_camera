@@ -8,7 +8,11 @@ import * as Sharing from 'expo-sharing';
 
 import type { Photo } from '@/types';
 
-const ALBUM = 'Wedding Peach Camera';
+/**
+ * 저장 전용 앨범 이름. 사진 앱에 그대로 노출되므로 앱 표시 이름과 같게 둔다.
+ * 바꾸면 이전 이름으로 만들어진 앨범은 그 자리에 남고 새 앨범이 따로 생긴다.
+ */
+const ALBUM = '웨피캠';
 
 /** 네이티브 이미지 피커로 사진 1장 선택 (갤러리 화면 폴백/대안). */
 export async function pickImageFromLibrary(): Promise<Photo | null> {

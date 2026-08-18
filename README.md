@@ -1,4 +1,4 @@
-# Wedding Peach Camera 🍑📷
+# 웨피캠 (Wepicam) 🍑📷
 
 프레임 · 스티커 · 텍스트로 사진을 꾸며 저장/공유하는 **초단순 카메라 앱** (React Native + Expo).
 디자인 핸드오프(`design_handoff_camera_app`)의 핑크·라벤더 감성 UI를 적용했습니다.
