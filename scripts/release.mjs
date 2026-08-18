@@ -105,8 +105,24 @@ function ascToken() {
       ? readFileSync(env.ASC_KEY_PATH, 'utf8')
       : null;
 
-  if (!keyId || !issuerId || !key) {
-    fail('ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_PATH(또는 ASC_KEY_BASE64)가 필요합니다.');
+  const missing = [];
+  if (!keyId) missing.push('ASC_KEY_ID');
+  if (!issuerId) missing.push('ASC_ISSUER_ID');
+  if (!key) missing.push('ASC_KEY_PATH(또는 ASC_KEY_BASE64)');
+  if (missing.length) {
+    fail(`.env.release 에 다음 값이 없습니다: ${missing.join(', ')}`);
+  }
+
+  // 값이 '있기만' 하면 통과시키면, 예시 문자열 그대로 서명해 Apple이 401을 준다.
+  // 그 시점은 빌드를 한참 돌린 뒤일 수 있으므로 형식까지 여기서 확인한다.
+  if (!/^[A-Z0-9]{10}$/.test(keyId)) {
+    fail(`ASC_KEY_ID 형식이 올바르지 않습니다: ${keyId}\n  영문 대문자·숫자 10자여야 합니다 (.p8 파일명의 AuthKey_ 뒷부분).`);
+  }
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(issuerId)) {
+    fail(`ASC_ISSUER_ID 형식이 올바르지 않습니다: ${issuerId}\n  App Store Connect > 사용자 및 액세스 > 통합 > 키 목록 상단의 Issuer ID(UUID)를 붙여넣으세요.`);
+  }
+  if (!key.includes('BEGIN PRIVATE KEY')) {
+    fail(`${env.ASC_KEY_PATH ?? 'ASC_KEY_BASE64'} 가 올바른 .p8 개인키가 아닙니다.`);
   }
 
   const b64 = (obj) => Buffer.from(JSON.stringify(obj)).toString('base64url');
