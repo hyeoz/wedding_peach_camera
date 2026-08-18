@@ -221,7 +221,8 @@ iPhone과 iPad에서 모두 쓸 수 있습니다.
 
 - 개인정보처리방침 URL (필수)
 - 지원 URL (필수)
-- 스크린샷 — iPhone 6.9" 및 **iPad 13"** (`supportsTablet: true`라 iPad 필수)
+- 스크린샷 — iPhone 6.9" `1320x2868` 및 **iPad 13" `2064x2752`** (`supportsTablet: true`라 iPad 필수)
+  → 캡처 도우미: `./scripts/screenshots.sh --list` 참고
 - 카테고리 (권장: 사진 및 비디오)
 - 연령 등급 설문
 - 저작권 표기 (예: `© 2026 <실명 또는 상호>`)
