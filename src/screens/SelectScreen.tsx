@@ -3,7 +3,9 @@ import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -53,7 +55,7 @@ export function SelectScreen({ navigation }: Props) {
   const colors = useTheme();
   const styles = useThemedStyles(makeStyles);
   const bounds = useContentBounds();
-  const { contentWidth, gridColumns, gutter, modalMaxWidth } = useResponsive();
+  const { contentWidth, gridColumns, gutter, height, modalMaxWidth } = useResponsive();
   const cellWidth = gridCellWidth(contentWidth, gridColumns, COLUMN_GAP, gutter);
   const {
     mode,
@@ -399,7 +401,22 @@ export function SelectScreen({ navigation }: Props) {
           onRequestClose={closeTextRegistration}
         >
           <Pressable style={styles.modalBackdrop} onPress={closeTextRegistration}>
-            <Pressable style={[styles.modalCard, { maxWidth: modalMaxWidth }]} onPress={() => {}}>
+            {/*
+              내용이 길어 키보드가 올라오면 등록 버튼이 가려진다. 카드 높이도 묶어두지
+              않으면 화면 밖으로 자라 안쪽 ScrollView 가 스크롤되지 않는다.
+              maxHeight 는 퍼센트 대신 실제 화면 높이로 계산해 부모 높이에 의존하지 않게 한다.
+            */}
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+              style={styles.keyboardAvoid}
+            >
+              <Pressable
+                style={[
+                  styles.modalCard,
+                  { maxWidth: modalMaxWidth, maxHeight: Math.round(height * 0.82) },
+                ]}
+                onPress={() => {}}
+              >
               <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
                 <Text style={styles.modalTitle}>새 텍스트 등록</Text>
 
@@ -484,7 +501,8 @@ export function SelectScreen({ navigation }: Props) {
                   />
                 </View>
               </ScrollView>
-            </Pressable>
+              </Pressable>
+            </KeyboardAvoidingView>
           </Pressable>
         </Modal>
       </SafeAreaView>
@@ -685,6 +703,10 @@ const makeStyles = (colors: ThemeColors) =>
       borderColor: colors.border,
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,
+    },
+    keyboardAvoid: {
+      width: '100%',
+      alignItems: 'center',
     },
     syntaxHint: {
       fontFamily: fonts.body,
