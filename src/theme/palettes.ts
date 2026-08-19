@@ -164,6 +164,8 @@ export const EMOJI_PALETTE: Record<string, PaletteName> = {
   '👑': 'gold',
   // 로봇은 금속·기계 느낌이라 차가운 계열이 어울린다. 같은 blue 인 🐧/💦 와 한 묶음.
   '🤖': 'blue',
+  // 해바라기는 노란 꽃이라 gold. ⭐/👑/🐣 와 같은 계열.
+  '🌻': 'gold',
 };
 
 export function paletteForEmoji(emoji: string): Palette {

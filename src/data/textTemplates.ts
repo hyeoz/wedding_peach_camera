@@ -58,7 +58,7 @@ export const DEFAULT_CARD_TINT = CARD_TINTS[0].value;
 export const CARD_EMOJIS = [
   '📝', '📔', '🗓️', '✅', '💬', '⭐',
   '🌈', '💖', '🍑', '☕', '🔥', '🤖',
-  '👾', '🎀', '🐥',
+  '👾', '🎀', '🐥', '🌻',
 ] as const;
 
 export const DEFAULT_CARD_EMOJI = CARD_EMOJIS[0];
