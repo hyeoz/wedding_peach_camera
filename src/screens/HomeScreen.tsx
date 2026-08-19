@@ -100,29 +100,36 @@ export function HomeScreen({ navigation }: Props) {
           </View>
         </Pressable>
 
-        <View style={styles.header}>
-          <Text style={styles.title}>모드를 선택해주세요</Text>
-          <Text style={styles.subtitle}>프레임 · 스티커 · 텍스트로 사진을 꾸며요</Text>
-        </View>
+        {/*
+          태블릿에서는 제목과 카드를 한 덩어리로 묶어 함께 세로 중앙에 둔다.
+          카드만 중앙 정렬하면 제목은 위에 붙고 카드는 화면 한가운데로 내려가
+          그 사이가 텅 비어 레이아웃이 깨진 것처럼 보인다.
+        */}
+        <View style={[styles.body, isTablet && styles.bodyTablet]}>
+          <View style={styles.header}>
+            <Text style={styles.title}>모드를 선택해주세요</Text>
+            <Text style={styles.subtitle}>프레임 · 스티커 · 텍스트로 사진을 꾸며요</Text>
+          </View>
 
-        <View style={[styles.cards, isTablet && styles.cardsTablet]}>
-          {cards.map((c) => (
-            <Pressable
-              key={c.mode}
-              onPress={() => start(c.mode)}
-              style={({ pressed }) => [
-                styles.card,
-                { backgroundColor: c.tint },
-                pressed && styles.pressed,
-              ]}
-            >
-              <View style={[styles.iconCircle, { backgroundColor: c.accent }]}>{c.icon}</View>
-              <View style={styles.cardText}>
-                <Text style={[styles.cardTitle, { color: c.titleColor }]}>{c.title}</Text>
-                <Text style={styles.cardDesc}>{c.desc}</Text>
-              </View>
-            </Pressable>
-          ))}
+          <View style={styles.cards}>
+            {cards.map((c) => (
+              <Pressable
+                key={c.mode}
+                onPress={() => start(c.mode)}
+                style={({ pressed }) => [
+                  styles.card,
+                  { backgroundColor: c.tint },
+                  pressed && styles.pressed,
+                ]}
+              >
+                <View style={[styles.iconCircle, { backgroundColor: c.accent }]}>{c.icon}</View>
+                <View style={styles.cardText}>
+                  <Text style={[styles.cardTitle, { color: c.titleColor }]}>{c.title}</Text>
+                  <Text style={styles.cardDesc}>{c.desc}</Text>
+                </View>
+              </Pressable>
+            ))}
+          </View>
         </View>
       </SafeAreaView>
     </GradientBackground>
@@ -186,14 +193,20 @@ const makeStyles = (colors: ThemeColors) =>
     color: colors.textMuted,
     marginTop: 6,
   },
-  cards: {
-    gap: spacing.md,
+  body: {
+    gap: spacing.lg,
   },
-  // 태블릿: 남는 세로 공간에 카드를 중앙 배치해 상단 쏠림을 없앤다.
-  cardsTablet: {
+  /**
+   * 태블릿: 제목 + 카드를 한 덩어리로 묶어 남는 세로 공간의 가운데에 둔다.
+   * 카드만 중앙 정렬하면 제목과 카드 사이가 화면 절반만큼 벌어져 보인다.
+   */
+  bodyTablet: {
     flex: 1,
     justifyContent: 'center',
-    paddingBottom: spacing.xxl * 2,
+    gap: spacing.xl,
+  },
+  cards: {
+    gap: spacing.md,
   },
   card: {
     borderRadius: radius.card,
