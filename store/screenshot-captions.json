@@ -1,6 +1,6 @@
 {
   "_comment": "App Store 스크린샷 캡션. slug 는 원본 파일명(.png)과 같아야 한다. compose-store-screenshots.py 가 읽는다.",
-  "_source": "실제 앱 화면 구성 기준. 없는 기능은 넣지 않았다.",
+  "_source": "실기기 캡처(iPhone IMG_3582·3585·3583·3584 / iPad IMG_0907·0910·0911·0912) 의 실제 화면 기준.",
   "screens": [
     {
       "slug": "01-home",
@@ -18,12 +18,7 @@
       "sub": "손가락으로 자유롭게 배치하세요"
     },
     {
-      "slug": "04-text",
-      "caption": "오늘의 기록을\n사진에 함께",
-      "sub": "고르는 항목과 적는 칸을 넣어 카드를 직접 만들 수 있어요"
-    },
-    {
-      "slug": "05-result",
+      "slug": "04-result",
       "caption": "완성한 사진은\n저장하고 공유",
       "sub": "기기 앨범에 저장하거나 원하는 곳으로 바로"
     }

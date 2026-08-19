@@ -52,12 +52,17 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parent.parent
 
-# ── 웨피캠 팔레트 (src/theme/palettes.ts 의 peach 계열) ────────────────
-BG_TOP = (255, 233, 224)      # 그라디언트 위쪽 (연한 피치)
-BG_BOTTOM = (255, 214, 214)   # 그라디언트 아래쪽 (연한 핑크)
-TEXT_MAIN = (58, 16, 48)      # colors.text
-TEXT_SUB = (150, 110, 125)    # colors.textMuted
-SHADOW_RGBA = (122, 17, 80, 70)
+# ── 웨피캠 팔레트 (src/theme/palettes.ts) ──────────────────────────────
+# 캔버스 색은 그 기기 캡처가 쓴 테마와 맞춰야 화면과 배경이 한 장처럼 보인다.
+# iPhone 캡처는 purple 테마, iPad 캡처는 peach 테마로 찍혔다.
+PALETTES = {
+    "purple": dict(bg_top=(239, 227, 255), bg_bottom=(243, 224, 255),
+                   text_main=(38, 22, 58), text_sub=(125, 111, 154),
+                   shadow=(61, 26, 128, 70)),
+    "peach": dict(bg_top=(255, 233, 214), bg_bottom=(255, 231, 220),
+                  text_main=(58, 32, 24), text_sub=(154, 115, 101),
+                  shadow=(143, 52, 23, 70)),
+}
 
 
 @dataclass(frozen=True)
@@ -72,13 +77,18 @@ class Spec:
     gap: int
     side_pad: int
     radius: int
+    palette: str
 
 
 SPECS = {
     "iphone": Spec("iphone", 1320, 2868, "APP_IPHONE_67",
-                   caption_size=76, sub_size=44, top_pad=150, gap=64, side_pad=96, radius=56),
+                   caption_size=76, sub_size=44, top_pad=150, gap=64, side_pad=96,
+                   radius=56, palette="purple"),
+    # iPad 원본은 가로(landscape) 로 찍혔는데 규격 캔버스는 세로다. 좌우 여백을 줄여
+    # 화면을 최대한 크게 넣고, 남는 세로 공간은 compose() 가 위아래로 나눠 준다.
     "ipad": Spec("ipad", 2064, 2752, "APP_IPAD_PRO_3GEN_129",
-                 caption_size=92, sub_size=52, top_pad=170, gap=72, side_pad=190, radius=40),
+                 caption_size=104, sub_size=58, top_pad=200, gap=72, side_pad=48,
+                 radius=40, palette="peach"),
 }
 
 
@@ -100,11 +110,12 @@ def load_font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
 
 def gradient_background(spec: Spec) -> Image.Image:
     """세로 그라디언트 — 앱의 GradientBackground 와 같은 인상을 준다."""
+    pal = PALETTES[spec.palette]
     bg = Image.new("RGB", (1, spec.height))
     px = bg.load()
     for y in range(spec.height):
         t = y / max(1, spec.height - 1)
-        px[0, y] = tuple(round(a + (b - a) * t) for a, b in zip(BG_TOP, BG_BOTTOM))
+        px[0, y] = tuple(round(a + (b - a) * t) for a, b in zip(pal["bg_top"], pal["bg_bottom"]))
     return bg.resize((spec.width, spec.height), Image.BILINEAR)
 
 
@@ -137,6 +148,7 @@ def rounded(img: Image.Image, radius: int) -> Image.Image:
 
 
 def compose(src: Path, dest: Path, spec: Spec, caption: str, sub: str, shadow: bool) -> None:
+    pal = PALETTES[spec.palette]
     canvas = gradient_background(spec).convert("RGBA")
     draw = ImageDraw.Draw(canvas)
 
@@ -147,30 +159,34 @@ def compose(src: Path, dest: Path, spec: Spec, caption: str, sub: str, shadow: b
     y = spec.top_pad
     for line in wrap(draw, caption, title_font, text_width):
         w = draw.textlength(line, font=title_font)
-        draw.text(((spec.width - w) / 2, y), line, font=title_font, fill=TEXT_MAIN)
+        draw.text(((spec.width - w) / 2, y), line, font=title_font, fill=pal["text_main"])
         y += int(spec.caption_size * 1.28)
 
     if sub:
         y += 8
         for line in wrap(draw, sub, sub_font, text_width):
             w = draw.textlength(line, font=sub_font)
-            draw.text(((spec.width - w) / 2, y), line, font=sub_font, fill=TEXT_SUB)
+            draw.text(((spec.width - w) / 2, y), line, font=sub_font, fill=pal["text_sub"])
             y += int(spec.sub_size * 1.35)
 
     # 기기 화면: 남은 영역에 비율 유지로 최대한 크게
-    top = y + spec.gap
+    band_top = y + spec.gap
+    bottom_pad = spec.side_pad // 2 if spec.side_pad > 96 else 48
     avail_w = spec.width - spec.side_pad * 2
-    avail_h = spec.height - top - spec.side_pad // 2
+    avail_h = spec.height - band_top - bottom_pad
     shot = Image.open(src).convert("RGB")
     scale = min(avail_w / shot.width, avail_h / shot.height)
     size = (max(1, round(shot.width * scale)), max(1, round(shot.height * scale)))
     shot = rounded(shot.resize(size, Image.LANCZOS), spec.radius)
 
+    # 가로로 찍힌 원본(iPad)은 세로 규격 캔버스에서 높이가 남는다. 남는 만큼을
+    # 위아래로 나눠 화면을 띠 한가운데 두어야 캡션 밑이 뜨거나 아래가 비지 않는다.
     x = (spec.width - size[0]) // 2
+    top = band_top + max(0, (avail_h - size[1]) // 2)
     if shadow:
         layer = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
         ImageDraw.Draw(layer).rounded_rectangle(
-            [(x, top + 18), (x + size[0], top + size[1] + 18)], radius=spec.radius, fill=SHADOW_RGBA
+            [(x, top + 18), (x + size[0], top + size[1] + 18)], radius=spec.radius, fill=pal["shadow"]
         )
         canvas = Image.alpha_composite(canvas, layer.filter(ImageFilter.GaussianBlur(26)))
 
