@@ -14,6 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system/legacy';
 
 import type { ImageLibraryMode, LibraryItem, UserLibraryMode } from '@/data/library';
+import { DEFAULT_CARD_EMOJI } from '@/data/textTemplates';
 
 const KEY = '@wpc/user-library/v1';
 const DIRECTORY = FileSystem.documentDirectory
@@ -71,7 +72,8 @@ function normalizeTextItems(value: unknown): LibraryItem[] {
       {
         id: item.id,
         label: item.label,
-        emoji: item.emoji || '📝',
+        // 이모지 선택 기능이 생기기 전에 저장된 항목에는 emoji 가 없다.
+        emoji: item.emoji || DEFAULT_CARD_EMOJI,
         templateSource: item.templateSource,
         tint: typeof item.tint === 'string' ? item.tint : undefined,
       },

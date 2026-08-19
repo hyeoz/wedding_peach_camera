@@ -31,7 +31,12 @@ import {
   TOKEN_NICKNAME,
   parseTemplateSource,
 } from '@/data/textTemplateParser';
-import { CARD_TINTS, DEFAULT_CARD_TINT } from '@/data/textTemplates';
+import {
+  CARD_EMOJIS,
+  CARD_TINTS,
+  DEFAULT_CARD_EMOJI,
+  DEFAULT_CARD_TINT,
+} from '@/data/textTemplates';
 import { TextCard } from '@/components/TextCard';
 import { useProfile } from '@/context/ProfileContext';
 import type { RootStackParamList } from '@/navigation/types';
@@ -79,6 +84,7 @@ export function SelectScreen({ navigation }: Props) {
   const [textDraftOpen, setTextDraftOpen] = useState(false);
   const [textSource, setTextSource] = useState(TEMPLATE_EXAMPLE);
   const [textTint, setTextTint] = useState<string>(DEFAULT_CARD_TINT);
+  const [textEmoji, setTextEmoji] = useState<string>(DEFAULT_CARD_EMOJI);
 
   const items = getItems(mode);
   const favIds = favorites[mode];
@@ -92,6 +98,7 @@ export function SelectScreen({ navigation }: Props) {
     id: 'preview',
     label: draftName.trim() || '미리보기',
     tint: textTint,
+    emoji: textEmoji,
   });
 
   const isSelected = (id: string) =>
@@ -148,24 +155,27 @@ export function SelectScreen({ navigation }: Props) {
     }
   };
 
+  const resetTextDraft = () => {
+    setTextSource(TEMPLATE_EXAMPLE);
+    setTextTint(DEFAULT_CARD_TINT);
+    setTextEmoji(DEFAULT_CARD_EMOJI);
+    setDraftName('');
+  };
+
   const closeTextRegistration = () => {
     if (saving) return;
     setTextDraftOpen(false);
-    setTextSource(TEMPLATE_EXAMPLE);
-    setTextTint(DEFAULT_CARD_TINT);
-    setDraftName('');
+    resetTextDraft();
   };
 
   const confirmTextRegistration = async () => {
     if (!draftName.trim() || textPreview.errors.length > 0 || saving) return;
     try {
       setSaving(true);
-      const item = await addTextItem(draftName, textSource, textTint);
+      const item = await addTextItem(draftName, textSource, textTint, textEmoji);
       toggleItemChoice(item.id);
       setTextDraftOpen(false);
-      setTextSource(TEMPLATE_EXAMPLE);
-      setTextTint(DEFAULT_CARD_TINT);
-      setDraftName('');
+      resetTextDraft();
     } catch (error) {
       Alert.alert('등록 실패', error instanceof Error ? error.message : '템플릿을 등록하지 못했습니다.');
     } finally {
@@ -447,6 +457,23 @@ export function SelectScreen({ navigation }: Props) {
                   autoCapitalize="none"
                   autoCorrect={false}
                 />
+
+                <Text style={styles.inputLabel}>이모지</Text>
+                <View style={styles.tintRow}>
+                  {CARD_EMOJIS.map((emoji) => (
+                    <Pressable
+                      key={emoji}
+                      accessibilityLabel={`${emoji} 이모지`}
+                      onPress={() => setTextEmoji(emoji)}
+                      style={[
+                        styles.emojiSwatch,
+                        textEmoji === emoji && styles.emojiSwatchOn,
+                      ]}
+                    >
+                      <Text style={styles.emojiSwatchText}>{emoji}</Text>
+                    </Pressable>
+                  ))}
+                </View>
 
                 <Text style={styles.inputLabel}>카드 색</Text>
                 <View style={styles.tintRow}>
@@ -735,6 +762,25 @@ const makeStyles = (colors: ThemeColors) =>
     tintSwatchOn: {
       borderWidth: 3,
       borderColor: colors.primary,
+    },
+    emojiSwatch: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      backgroundColor: colors.white,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    emojiSwatchOn: {
+      borderWidth: 2.5,
+      borderColor: colors.primary,
+      backgroundColor: colors.tintPink,
+    },
+    emojiSwatchText: {
+      fontSize: 20,
+      lineHeight: 26,
     },
     previewWrap: {
       alignItems: 'center',

@@ -17,6 +17,7 @@ import {
 } from '@/data/library';
 import { parseTemplateSource } from '@/data/textTemplateParser';
 import {
+  DEFAULT_CARD_EMOJI,
   DEFAULT_CARD_TINT,
   findBuiltInTemplate,
   type TextTemplate,
@@ -38,7 +39,12 @@ interface UserLibraryContextValue {
   /** 텍스트 카드 렌더에 쓰는 템플릿 조회 (내장 + 사용자 등록). */
   getTemplate: (id: string) => TextTemplate | undefined;
   addItem: (mode: ImageLibraryMode, label: string, sourceUri: string) => Promise<LibraryItem>;
-  addTextItem: (label: string, templateSource: string, tint: string) => Promise<LibraryItem>;
+  addTextItem: (
+    label: string,
+    templateSource: string,
+    tint: string,
+    emoji: string,
+  ) => Promise<LibraryItem>;
   removeItem: (mode: UserLibraryMode, id: string) => Promise<void>;
 }
 
@@ -114,17 +120,17 @@ export function UserLibraryProvider({ children }: { children: React.ReactNode })
   );
 
   const addTextItem = useCallback(
-    async (label: string, templateSource: string, tint: string) => {
+    async (label: string, templateSource: string, tint: string, emoji: string) => {
       const id = `text-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
       // 저장 전에 컴파일해 본다. 깨진 템플릿이 목록에 남지 않게 하기 위함.
-      const { errors } = parseTemplateSource(templateSource, { id, label, tint });
+      const { errors } = parseTemplateSource(templateSource, { id, label, tint, emoji });
       if (errors.length > 0) throw new Error(errors[0]);
 
       const item: LibraryItem = {
         id,
         label: label.trim(),
-        emoji: '📝',
+        emoji: emoji || DEFAULT_CARD_EMOJI,
         templateSource,
         tint,
       };

@@ -21,7 +21,7 @@
  * 구분자가 `//` 인 이유: 단일 `/` 를 쓰면 "촬영일 10/20" 같은 평범한 문장이
  * 선택지로 잘못 해석된다. `//` 는 일반 문장에 거의 나오지 않아 오탐이 없다.
  */
-import type { TextLine, TextTemplate } from '@/data/textTemplates';
+import { DEFAULT_CARD_EMOJI, type TextLine, type TextTemplate } from '@/data/textTemplates';
 
 /** 선택지 구분자. 도움말·미리보기 안내 문구도 이 값을 쓴다. */
 export const CHOICE_SEPARATOR = '//';
@@ -143,7 +143,7 @@ export function parseTemplateSource(source: string, options: ParseOptions): Pars
     template: {
       id: options.id,
       label: options.label,
-      emoji: options.emoji ?? '📝',
+      emoji: options.emoji || DEFAULT_CARD_EMOJI,
       headerTemplate,
       tint: options.tint,
       lines: compiled,

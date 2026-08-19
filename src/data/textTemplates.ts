@@ -50,6 +50,18 @@ export const CARD_TINTS = [
 
 export const DEFAULT_CARD_TINT = CARD_TINTS[0].value;
 
+/**
+ * 카드 머리글에 붙는 이모지 선택지.
+ * 기록·다이어리 성격에 맞는 것들로 골랐고, 목록에 없더라도 기존에 저장된
+ * 이모지는 그대로 렌더된다(하위 호환은 storage 의 기본값 처리에 맡긴다).
+ */
+export const CARD_EMOJIS = [
+  '📝', '📔', '🗓️', '✅', '💬', '⭐',
+  '🌈', '💖', '🍑', '☕', '🔥', '🤖',
+] as const;
+
+export const DEFAULT_CARD_EMOJI = CARD_EMOJIS[0];
+
 export const TEXT_TEMPLATES: TextTemplate[] = [
   {
     id: 't1',
