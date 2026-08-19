@@ -46,6 +46,7 @@ import {
   radius,
   shadow,
   spacing,
+  useCanvasAspectRatio,
   useContentBounds,
   useResponsive,
   useTheme,
@@ -61,6 +62,7 @@ export function SelectScreen({ navigation }: Props) {
   const styles = useThemedStyles(makeStyles);
   const bounds = useContentBounds();
   const { contentWidth, gridColumns, gutter, height, modalMaxWidth } = useResponsive();
+  const canvasAspectRatio = useCanvasAspectRatio();
   const cellWidth = gridCellWidth(contentWidth, gridColumns, COLUMN_GAP, gutter);
   const {
     mode,
@@ -223,7 +225,7 @@ export function SelectScreen({ navigation }: Props) {
                 <Text style={styles.registerTitle}>내 {modeLabel(mode)} 만들기</Text>
                 <Text style={styles.registerHint}>
                   이미지를 고르고 원하는 이름을 붙여 등록하세요
-                  {mode === 'frame' ? ' · 투명 PNG 권장' : ''}
+                  {mode === 'frame' ? '\n투명 PNG · 세로로 긴 비율 권장 (사진 영역에 꽉 차게 늘어나요)' : ''}
                 </Text>
               </View>
               <PillButton
@@ -364,12 +366,26 @@ export function SelectScreen({ navigation }: Props) {
             <Pressable style={[styles.modalCard, { maxWidth: modalMaxWidth }]} onPress={() => {}}>
               <Text style={styles.modalTitle}>새 {modeLabel(mode)} 등록</Text>
               {draftUri ? (
-                <Thumb
-                  source={{ uri: draftUri }}
-                  resizeMode="contain"
-                  tint={colors.tintPink}
-                  style={styles.modalPreview}
-                />
+                <>
+                  {/*
+                    프레임은 편집 캔버스를 꽉 채우도록 늘어난다(FrameOverlay 의 stretch).
+                    미리보기도 같은 비율·같은 방식으로 보여줘야 등록 후에 놀라지 않는다.
+                  */}
+                  <Thumb
+                    source={{ uri: draftUri }}
+                    resizeMode={isFrame ? 'stretch' : 'contain'}
+                    tint={colors.tintPink}
+                    style={[
+                      styles.modalPreview,
+                      isFrame && { aspectRatio: canvasAspectRatio, height: undefined },
+                    ]}
+                  />
+                  {isFrame ? (
+                    <Text style={styles.previewNote}>
+                      실제 사진 영역 비율로 보여줍니다 · 비율이 다르면 이렇게 늘어나요
+                    </Text>
+                  ) : null}
+                </>
               ) : null}
               <Text style={styles.inputLabel}>이름</Text>
               <TextInput
@@ -734,6 +750,14 @@ const makeStyles = (colors: ThemeColors) =>
     keyboardAvoid: {
       width: '100%',
       alignItems: 'center',
+    },
+    previewNote: {
+      fontFamily: fonts.body,
+      fontSize: 12,
+      lineHeight: 17,
+      color: colors.textMuted,
+      textAlign: 'center',
+      marginTop: -spacing.sm,
     },
     syntaxHint: {
       fontFamily: fonts.body,

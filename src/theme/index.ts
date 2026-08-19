@@ -7,6 +7,7 @@ export { useTheme, useThemedStyles, type ThemeColors } from './ThemeContext';
 export {
   breakpoints,
   gridCellWidth,
+  useCanvasAspectRatio,
   useContentBounds,
   useResponsive,
   type Responsive,
