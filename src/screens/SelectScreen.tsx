@@ -476,69 +476,79 @@ export function SelectScreen({ navigation }: Props) {
                 ]}
                 onPress={() => {}}
               >
-              <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+              <ScrollView
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.textModalContent}
+              >
                 <Text style={styles.modalTitle}>새 텍스트 등록</Text>
 
-                <Text style={styles.inputLabel}>종류</Text>
-                <View style={styles.variantRow}>
-                  {(
-                    [
-                      { key: 'card', label: '카드', hint: '배경이 있는 다이어리' },
-                      { key: 'stamp', label: '타임스탬프', hint: '필름 날짜 각인' },
-                    ] as const
-                  ).map((option) => (
-                    <Pressable
-                      key={option.key}
-                      onPress={() => changeVariant(option.key)}
-                      style={[
-                        styles.variantChip,
-                        textVariant === option.key && styles.variantChipOn,
-                      ]}
-                    >
-                      <Text
+                <View style={styles.field}>
+                  <Text style={styles.inputLabel}>종류</Text>
+                  <View style={styles.variantRow}>
+                    {(
+                      [
+                        { key: 'card', label: '카드', hint: '배경이 있는 다이어리' },
+                        { key: 'stamp', label: '타임스탬프', hint: '필름 날짜 각인' },
+                      ] as const
+                    ).map((option) => (
+                      <Pressable
+                        key={option.key}
+                        onPress={() => changeVariant(option.key)}
                         style={[
-                          styles.variantLabel,
-                          textVariant === option.key && styles.variantLabelOn,
+                          styles.variantChip,
+                          textVariant === option.key && styles.variantChipOn,
                         ]}
                       >
-                        {option.label}
-                      </Text>
-                      <Text style={styles.variantHint}>{option.hint}</Text>
-                    </Pressable>
-                  ))}
+                        <Text
+                          style={[
+                            styles.variantLabel,
+                            textVariant === option.key && styles.variantLabelOn,
+                          ]}
+                        >
+                          {option.label}
+                        </Text>
+                        <Text style={styles.variantHint}>{option.hint}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
                 </View>
 
-                <Text style={styles.inputLabel}>이름</Text>
-                <TextInput
-                  value={draftName}
-                  onChangeText={setDraftName}
-                  placeholder="예: 나의 데일리 체크"
-                  placeholderTextColor={colors.textMuted}
-                  maxLength={24}
-                  returnKeyType="next"
-                  style={styles.input}
-                />
+                <View style={styles.field}>
+                  <Text style={styles.inputLabel}>이름</Text>
+                  <TextInput
+                    value={draftName}
+                    onChangeText={setDraftName}
+                    placeholder="예: 나의 데일리 체크"
+                    placeholderTextColor={colors.textMuted}
+                    maxLength={24}
+                    returnKeyType="next"
+                    style={styles.input}
+                  />
+                </View>
 
-                <Text style={styles.inputLabel}>내용</Text>
-                <Text style={styles.syntaxHint}>
-                  첫 줄은 카드 제목 · {TOKEN_NICKNAME} 닉네임 · {TOKEN_DATE} 오늘 날짜{'\n'}
-                  {`선택지는 ${CHOICE_SEPARATOR} 로 구분 (예: 식단 good ${CHOICE_SEPARATOR} bad)`}{'\n'}
-                  {`자유 입력 칸은 ${TOKEN_INPUT} (예: 특이사항 ${TOKEN_INPUT})`}{'\n'}
-                  사진이 찍힌 때: {TOKEN_SHOT_DATETIME} · {TOKEN_SHOT_DATE} · {TOKEN_SHOT_TIME}
-                </Text>
-                <TextInput
-                  value={textSource}
-                  onChangeText={setTextSource}
-                  placeholder={TEMPLATE_EXAMPLE}
-                  placeholderTextColor={colors.textMuted}
-                  style={[styles.input, styles.sourceInput]}
-                  multiline
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
+                <View style={styles.field}>
+                  <Text style={styles.inputLabel}>내용</Text>
+                  <Text style={styles.syntaxHint}>
+                    첫 줄은 카드 제목 · {TOKEN_NICKNAME} 닉네임 · {TOKEN_DATE} 오늘 날짜{'\n'}
+                    {`선택지는 ${CHOICE_SEPARATOR} 로 구분 (예: 식단 good ${CHOICE_SEPARATOR} bad)`}{'\n'}
+                    {`자유 입력 칸은 ${TOKEN_INPUT} (예: 특이사항 ${TOKEN_INPUT})`}{'\n'}
+                    사진이 찍힌 때: {TOKEN_SHOT_DATETIME} · {TOKEN_SHOT_DATE} · {TOKEN_SHOT_TIME}
+                  </Text>
+                  <TextInput
+                    value={textSource}
+                    onChangeText={setTextSource}
+                    placeholder={TEMPLATE_EXAMPLE}
+                    placeholderTextColor={colors.textMuted}
+                    style={[styles.input, styles.sourceInput]}
+                    multiline
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                </View>
 
                 {isStamp ? (
-                  <>
+                  <View style={styles.field}>
                     <Text style={styles.inputLabel}>글자색</Text>
                     <View style={styles.tintRow}>
                       {STAMP_COLORS.map((color) => (
@@ -554,73 +564,80 @@ export function SelectScreen({ navigation }: Props) {
                         />
                       ))}
                     </View>
-                  </>
+                  </View>
                 ) : (
                   <>
-                <Text style={styles.inputLabel}>이모지</Text>
-                <View style={styles.tintRow}>
-                  {CARD_EMOJIS.map((emoji) => (
-                    <Pressable
-                      key={emoji}
-                      accessibilityLabel={`${emoji} 이모지`}
-                      onPress={() => setTextEmoji(emoji)}
-                      style={[
-                        styles.emojiSwatch,
-                        textEmoji === emoji && styles.emojiSwatchOn,
-                      ]}
-                    >
-                      <Text style={styles.emojiSwatchText}>{emoji}</Text>
-                    </Pressable>
-                  ))}
-                </View>
-
-                <Text style={styles.inputLabel}>카드 색</Text>
-                <View style={styles.tintRow}>
-                  {CARD_TINTS.map((tint) => (
-                    <Pressable
-                      key={tint.id}
-                      accessibilityLabel={`${tint.label} 배경`}
-                      onPress={() => setTextTint(tint.value)}
-                      style={[
-                        styles.tintSwatch,
-                        { backgroundColor: tint.value },
-                        textTint === tint.value && styles.tintSwatchOn,
-                      ]}
-                    />
-                  ))}
-                </View>
-                  </>
-                )}
-
-                <Text style={styles.inputLabel}>미리보기</Text>
-                {textPreview.template ? (
-                  <>
-                    {/* 타임스탬프는 사진 위에 얹히므로 어두운 바탕에서 확인해야 실제와 비슷하다. */}
-                    <View style={[styles.previewWrap, isStamp && styles.previewWrapStamp]}>
-                      <TextCard
-                        template={textPreview.template}
-                        nickname={profile.nickname}
-                        choices={{}}
-                        notes={{}}
-                      />
-                    </View>
-                    {isStamp ? (
-                      <Text style={styles.previewNote}>
-                        지금 시각으로 보여줍니다 · 실제로는 사진이 찍힌 시각이 들어가요
-                      </Text>
-                    ) : null}
-                  </>
-                ) : (
-                  <View style={styles.errorBox}>
-                    {textPreview.errors.map((error) => (
-                      <Text key={error} style={styles.errorText}>
-                        · {error}
-                      </Text>
+                <View style={styles.field}>
+                  <Text style={styles.inputLabel}>이모지</Text>
+                  <View style={styles.tintRow}>
+                    {CARD_EMOJIS.map((emoji) => (
+                      <Pressable
+                        key={emoji}
+                        accessibilityLabel={`${emoji} 이모지`}
+                        onPress={() => setTextEmoji(emoji)}
+                        style={[
+                          styles.emojiSwatch,
+                          textEmoji === emoji && styles.emojiSwatchOn,
+                        ]}
+                      >
+                        <Text style={styles.emojiSwatchText}>{emoji}</Text>
+                      </Pressable>
                     ))}
                   </View>
+                </View>
+
+                <View style={styles.field}>
+                  <Text style={styles.inputLabel}>카드 색</Text>
+                  <View style={styles.tintRow}>
+                    {CARD_TINTS.map((tint) => (
+                      <Pressable
+                        key={tint.id}
+                        accessibilityLabel={`${tint.label} 배경`}
+                        onPress={() => setTextTint(tint.value)}
+                        style={[
+                          styles.tintSwatch,
+                          { backgroundColor: tint.value },
+                          textTint === tint.value && styles.tintSwatchOn,
+                        ]}
+                      />
+                    ))}
+                  </View>
+                </View>
+                  </>
                 )}
 
-                <View style={styles.modalButtons}>
+                <View style={styles.field}>
+                  <Text style={styles.inputLabel}>미리보기</Text>
+                  {textPreview.template ? (
+                    <>
+                      {/* 타임스탬프는 사진 위에 얹히므로 어두운 바탕에서 확인해야 실제와 비슷하다. */}
+                      <View style={[styles.previewWrap, isStamp && styles.previewWrapStamp]}>
+                        <TextCard
+                          template={textPreview.template}
+                          nickname={profile.nickname}
+                          choices={{}}
+                          notes={{}}
+                        />
+                      </View>
+                      {isStamp ? (
+                        <Text style={styles.previewNote}>
+                          지금 시각으로 보여줍니다 · 실제로는 사진이 찍힌 시각이 들어가요
+                        </Text>
+                      ) : null}
+                    </>
+                  ) : (
+                    <View style={styles.errorBox}>
+                      {textPreview.errors.map((error) => (
+                        <Text key={error} style={styles.errorText}>
+                          · {error}
+                        </Text>
+                      ))}
+                    </View>
+                  )}
+
+                </View>
+
+                <View style={[styles.modalButtons, styles.modalButtonsInScroll]}>
                   <PillButton
                     label="취소"
                     variant="outline"
@@ -844,20 +861,31 @@ const makeStyles = (colors: ThemeColors) =>
       width: '100%',
       alignItems: 'center',
     },
+    /**
+     * 텍스트 등록 모달 본문.
+     * modalCard 의 gap 은 ScrollView 한 겹에만 걸려 안쪽 섹션에는 적용되지 않는다.
+     * 섹션 사이 간격은 여기서, 라벨과 입력 사이 간격은 field 에서 준다.
+     */
+    textModalContent: {
+      gap: spacing.xl,
+      paddingBottom: spacing.xs,
+    },
+    /** 라벨 + 입력을 한 묶음으로 붙여 두는 단위. */
+    field: {
+      gap: spacing.sm,
+    },
     previewNote: {
       fontFamily: fonts.body,
       fontSize: 12,
       lineHeight: 17,
       color: colors.textMuted,
       textAlign: 'center',
-      marginTop: -spacing.sm,
     },
     syntaxHint: {
       fontFamily: fonts.body,
       fontSize: 12,
       lineHeight: 18,
       color: colors.textMuted,
-      marginBottom: spacing.xs,
     },
     sourceInput: {
       minHeight: 132,
@@ -958,6 +986,10 @@ const makeStyles = (colors: ThemeColors) =>
       flexDirection: 'row',
       gap: spacing.md,
       marginTop: spacing.sm,
+    },
+    /** 텍스트 모달은 섹션 간격(textModalContent.gap)이 이미 있어 별도 여백을 두지 않는다. */
+    modalButtonsInScroll: {
+      marginTop: 0,
     },
     flex1: {
       flex: 1,
