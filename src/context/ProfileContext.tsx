@@ -26,7 +26,7 @@ const DEFAULT_PROFILE: Profile = { nickname: '', emoji: '🍑' };
 export const PROFILE_EMOJIS = [
   '🍑', '🐰', '🐱', '🐻', '🌸', '🎀', '⭐', '🍒',
   '🦄', '👾', '🌷', '🐣', '🍓', '🐧', '💦', '🌈',
-  '🧸', '💐', '👑',
+  '🧸', '💐', '👑', '🤖',
 ];
 
 interface ProfileContextValue {
