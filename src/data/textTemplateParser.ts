@@ -21,7 +21,12 @@
  * 구분자가 `//` 인 이유: 단일 `/` 를 쓰면 "촬영일 10/20" 같은 평범한 문장이
  * 선택지로 잘못 해석된다. `//` 는 일반 문장에 거의 나오지 않아 오탐이 없다.
  */
-import { DEFAULT_CARD_EMOJI, type TextLine, type TextTemplate } from '@/data/textTemplates';
+import {
+  DEFAULT_CARD_EMOJI,
+  type TextLine,
+  type TextTemplate,
+  type TextVariant,
+} from '@/data/textTemplates';
 
 /** 선택지 구분자. 도움말·미리보기 안내 문구도 이 값을 쓴다. */
 export const CHOICE_SEPARATOR = '//';
@@ -30,6 +35,15 @@ export const TOKEN_DATE = '{{date}}';
 export const TOKEN_NICKNAME = '{{nickname}}';
 export const TOKEN_INPUT = '{{input}}';
 
+/**
+ * 사진 촬영 일시(EXIF) 토큰.
+ * {{date}} 는 "오늘"(=카드를 만든 날)이고, 아래는 "사진이 찍힌 때"라 의미가 다르다.
+ */
+export const TOKEN_SHOT_DATE = '{{shotDate}}';
+export const TOKEN_SHOT_TIME = '{{shotTime}}';
+export const TOKEN_SHOT_DATETIME = '{{shotDateTime}}';
+export const TOKEN_SHOT_FILM = '{{shotFilm}}';
+
 /** 등록 모달에서 그대로 보여주는 예시. */
 export const TEMPLATE_EXAMPLE = [
   `${TOKEN_NICKNAME}님의 ${TOKEN_DATE}`,
@@ -37,6 +51,9 @@ export const TEMPLATE_EXAMPLE = [
   `운동 good ${CHOICE_SEPARATOR} bad`,
   `특이사항 ${TOKEN_INPUT}`,
 ].join('\n');
+
+/** 타임스탬프(stamp) 종류의 기본 예시. */
+export const STAMP_EXAMPLE = TOKEN_SHOT_DATETIME;
 
 export interface ParseResult {
   /** 컴파일 성공 시의 템플릿. 실패면 null. */
@@ -53,6 +70,10 @@ export interface ParseOptions {
   /** 카드 배경색. */
   tint: string;
   emoji?: string;
+  /** 카드형(기본) 또는 배경 없는 타임스탬프형. */
+  variant?: TextVariant;
+  /** stamp 변형의 글자색. */
+  stampColor?: string;
 }
 
 const MAX_LINES = 12;
@@ -147,6 +168,8 @@ export function parseTemplateSource(source: string, options: ParseOptions): Pars
       headerTemplate,
       tint: options.tint,
       lines: compiled,
+      variant: options.variant ?? 'card',
+      stampColor: options.stampColor,
     },
     errors: [],
   };

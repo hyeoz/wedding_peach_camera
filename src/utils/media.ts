@@ -7,6 +7,7 @@ import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
 
 import type { Photo } from '@/types';
+import { resolveTakenAt } from '@/utils/exif';
 
 /**
  * 저장 전용 앨범 이름. 사진 앱에 그대로 노출되므로 앱 표시 이름과 같게 둔다.
@@ -22,10 +23,19 @@ export async function pickImageFromLibrary(): Promise<Photo | null> {
   const result = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ['images'],
     quality: 1,
+    // 타임스탬프 텍스트가 쓸 원본 촬영 일시를 함께 받는다.
+    exif: true,
   });
   if (result.canceled || !result.assets?.length) return null;
   const a = result.assets[0];
-  return { uri: a.uri, width: a.width, height: a.height };
+  const taken = resolveTakenAt({ exif: a.exif });
+  return {
+    uri: a.uri,
+    width: a.width,
+    height: a.height,
+    takenAt: taken.value,
+    takenAtSource: taken.source,
+  };
 }
 
 /** 기기 갤러리 최근 사진들을 불러온다 (인앱 그리드용). */

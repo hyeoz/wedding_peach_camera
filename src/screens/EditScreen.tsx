@@ -182,6 +182,7 @@ export function EditScreen({ navigation }: Props) {
                   active={activeItemId === item.id}
                   hideChrome={capturing}
                   nickname={profile.nickname}
+                  takenAt={photo.takenAt}
                   sticker={item.kind === 'sticker' ? getItem('sticker', item.refId) : undefined}
                   canvasOrigin={canvasOrigin}
                   onActivate={setActiveItem}

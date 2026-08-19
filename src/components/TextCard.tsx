@@ -1,14 +1,29 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { TOKEN_DATE, TOKEN_NICKNAME } from '@/data/textTemplateParser';
-import type { TextTemplate } from '@/data/textTemplates';
+import {
+  TOKEN_DATE,
+  TOKEN_NICKNAME,
+  TOKEN_SHOT_DATE,
+  TOKEN_SHOT_DATETIME,
+  TOKEN_SHOT_FILM,
+  TOKEN_SHOT_TIME,
+} from '@/data/textTemplateParser';
+import { DEFAULT_STAMP_COLOR, type TextTemplate } from '@/data/textTemplates';
 import { todayLabel } from '@/utils/date';
+import {
+  formatShotDate,
+  formatShotDateTime,
+  formatShotFilm,
+  formatShotTime,
+} from '@/utils/exif';
 import { fonts, radius, useTheme, useThemedStyles, type ThemeColors } from '@/theme';
 
 interface TextCardProps {
   template: TextTemplate;
   nickname: string;
+  /** 사진 촬영 일시(epoch ms). 없으면 현재 시각으로 대체한다. */
+  takenAt?: number;
   choices: Record<string, string>;
   notes: Record<string, string>;
   /** 편집 가능(선택된 카드) 여부. */
@@ -24,6 +39,7 @@ interface TextCardProps {
 export function TextCard({
   template,
   nickname,
+  takenAt,
   choices,
   notes,
   editable = false,
@@ -32,10 +48,29 @@ export function TextCard({
 }: TextCardProps) {
   const colors = useTheme();
   const styles = useThemedStyles(makeStyles);
+
+  // 촬영 시각을 못 받은 경우(등록 미리보기 등)에는 현재 시각으로 보여준다.
+  const shotMs = takenAt ?? Date.now();
+
   // 토큰은 여러 번 써도 모두 치환되도록 전역 치환한다.
   const header = template.headerTemplate
     .replaceAll(TOKEN_NICKNAME, nickname || 'OOO')
-    .replaceAll(TOKEN_DATE, todayLabel());
+    .replaceAll(TOKEN_DATE, todayLabel())
+    .replaceAll(TOKEN_SHOT_DATETIME, formatShotDateTime(shotMs))
+    .replaceAll(TOKEN_SHOT_DATE, formatShotDate(shotMs))
+    .replaceAll(TOKEN_SHOT_TIME, formatShotTime(shotMs))
+    .replaceAll(TOKEN_SHOT_FILM, formatShotFilm(shotMs));
+
+  // 타임스탬프는 카드 장식 없이 글자만 얹는다.
+  if (template.variant === 'stamp') {
+    return (
+      <View style={styles.stampWrap}>
+        <Text style={[styles.stampText, { color: template.stampColor || DEFAULT_STAMP_COLOR }]}>
+          {header}
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.card, { backgroundColor: template.tint || colors.tintPink }]}>
@@ -88,6 +123,22 @@ export function TextCard({
 
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
+  /**
+   * 필름 카메라 날짜 각인 느낌.
+   * 배경·테두리 없이 글자만 올리고, 어떤 사진 위에서도 읽히도록 발광을 준다.
+   */
+  stampWrap: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  stampText: {
+    fontFamily: fonts.body,
+    fontSize: 17,
+    letterSpacing: 1.2,
+    textShadowColor: 'rgba(255, 96, 0, 0.55)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 7,
+  },
   card: {
     minWidth: 200,
     maxWidth: 260,

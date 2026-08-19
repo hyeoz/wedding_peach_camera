@@ -14,7 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system/legacy';
 
 import type { ImageLibraryMode, LibraryItem, UserLibraryMode } from '@/data/library';
-import { DEFAULT_CARD_EMOJI } from '@/data/textTemplates';
+import { DEFAULT_CARD_EMOJI, type TextVariant } from '@/data/textTemplates';
 
 const KEY = '@wpc/user-library/v1';
 const DIRECTORY = FileSystem.documentDirectory
@@ -38,6 +38,8 @@ interface StoredTextItem {
   emoji: string;
   templateSource: string;
   tint?: string;
+  variant?: TextVariant;
+  stampColor?: string;
 }
 
 function normalizeImageItems(value: unknown): LibraryItem[] {
@@ -76,6 +78,9 @@ function normalizeTextItems(value: unknown): LibraryItem[] {
         emoji: item.emoji || DEFAULT_CARD_EMOJI,
         templateSource: item.templateSource,
         tint: typeof item.tint === 'string' ? item.tint : undefined,
+        // variant 가 생기기 전에 저장된 항목은 전부 카드형이다.
+        variant: item.variant === 'stamp' ? 'stamp' : 'card',
+        stampColor: typeof item.stampColor === 'string' ? item.stampColor : undefined,
       },
     ];
   });
@@ -103,12 +108,14 @@ export async function saveUserLibrary(state: UserLibraryState): Promise<void> {
   const serializable = {
     frame: toImage('frame'),
     sticker: toImage('sticker'),
-    text: state.text.map(({ id, label, emoji, templateSource, tint }) => ({
+    text: state.text.map(({ id, label, emoji, templateSource, tint, variant, stampColor }) => ({
       id,
       label,
       emoji,
       templateSource: templateSource ?? '',
       tint,
+      variant,
+      stampColor,
     })),
   };
   await AsyncStorage.setItem(KEY, JSON.stringify(serializable));

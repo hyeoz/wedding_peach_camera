@@ -27,6 +27,7 @@ import {
   useThemedStyles,
   type ThemeColors,
 } from '@/theme';
+import { resolveTakenAt } from '@/utils/exif';
 import { loadRecentPhotos, pickImageFromLibrary, resolveAssetUri } from '@/utils/media';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Gallery'>;
@@ -62,7 +63,15 @@ export function GalleryScreen({ navigation }: Props) {
   const onPick = async (asset: MediaLibrary.Asset) => {
     try {
       const uri = await resolveAssetUri(asset);
-      setPhoto({ uri, width: asset.width, height: asset.height });
+      // 인앱 그리드의 Asset 은 creationTime 을 이미 갖고 있어 추가 조회가 필요 없다.
+      const taken = resolveTakenAt({ assetCreationTime: asset.creationTime });
+      setPhoto({
+        uri,
+        width: asset.width,
+        height: asset.height,
+        takenAt: taken.value,
+        takenAtSource: taken.source,
+      });
       goEdit();
     } catch (e) {
       setError(e instanceof Error ? e.message : '사진을 불러오지 못했습니다.');

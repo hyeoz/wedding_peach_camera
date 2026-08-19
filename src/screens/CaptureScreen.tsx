@@ -17,6 +17,7 @@ import {
   useThemedStyles,
   type ThemeColors,
 } from '@/theme';
+import { resolveTakenAt } from '@/utils/exif';
 import { pickImageFromLibrary } from '@/utils/media';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Capture'>;
@@ -47,9 +48,17 @@ export function CaptureScreen({ navigation }: Props) {
     if (!cameraRef.current || busy) return;
     try {
       setBusy(true);
-      const result = await cameraRef.current.takePictureAsync({ quality: 1 });
+      // exif: true 로 받아야 촬영 일시를 타임스탬프 텍스트에 쓸 수 있다.
+      const result = await cameraRef.current.takePictureAsync({ quality: 1, exif: true });
       if (!result) return;
-      setPhoto({ uri: result.uri, width: result.width, height: result.height });
+      const taken = resolveTakenAt({ exif: result.exif });
+      setPhoto({
+        uri: result.uri,
+        width: result.width,
+        height: result.height,
+        takenAt: taken.value,
+        takenAtSource: taken.source,
+      });
       goEdit();
     } catch (e) {
       Alert.alert('오류', e instanceof Error ? e.message : '촬영에 실패했습니다.');

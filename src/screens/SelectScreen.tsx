@@ -29,6 +29,10 @@ import {
   TOKEN_DATE,
   TOKEN_INPUT,
   TOKEN_NICKNAME,
+  TOKEN_SHOT_DATE,
+  TOKEN_SHOT_DATETIME,
+  TOKEN_SHOT_TIME,
+  STAMP_EXAMPLE,
   parseTemplateSource,
 } from '@/data/textTemplateParser';
 import {
@@ -36,6 +40,9 @@ import {
   CARD_TINTS,
   DEFAULT_CARD_EMOJI,
   DEFAULT_CARD_TINT,
+  DEFAULT_STAMP_COLOR,
+  STAMP_COLORS,
+  type TextVariant,
 } from '@/data/textTemplates';
 import { TextCard } from '@/components/TextCard';
 import { useProfile } from '@/context/ProfileContext';
@@ -87,6 +94,9 @@ export function SelectScreen({ navigation }: Props) {
   const [textSource, setTextSource] = useState(TEMPLATE_EXAMPLE);
   const [textTint, setTextTint] = useState<string>(DEFAULT_CARD_TINT);
   const [textEmoji, setTextEmoji] = useState<string>(DEFAULT_CARD_EMOJI);
+  const [textVariant, setTextVariant] = useState<TextVariant>('card');
+  const [stampColor, setStampColor] = useState<string>(DEFAULT_STAMP_COLOR);
+  const isStamp = textVariant === 'stamp';
 
   const items = getItems(mode);
   const favIds = favorites[mode];
@@ -101,6 +111,8 @@ export function SelectScreen({ navigation }: Props) {
     label: draftName.trim() || '미리보기',
     tint: textTint,
     emoji: textEmoji,
+    variant: textVariant,
+    stampColor,
   });
 
   const isSelected = (id: string) =>
@@ -161,7 +173,21 @@ export function SelectScreen({ navigation }: Props) {
     setTextSource(TEMPLATE_EXAMPLE);
     setTextTint(DEFAULT_CARD_TINT);
     setTextEmoji(DEFAULT_CARD_EMOJI);
+    setTextVariant('card');
+    setStampColor(DEFAULT_STAMP_COLOR);
     setDraftName('');
+  };
+
+  /** 종류를 바꾸면 그 종류에 어울리는 예시 문법으로 갈아 끼운다. */
+  const changeVariant = (next: TextVariant) => {
+    setTextVariant(next);
+    setTextSource((current) => {
+      const isDefaultCard = current.trim() === TEMPLATE_EXAMPLE.trim();
+      const isDefaultStamp = current.trim() === STAMP_EXAMPLE.trim();
+      if (next === 'stamp' && isDefaultCard) return STAMP_EXAMPLE;
+      if (next === 'card' && isDefaultStamp) return TEMPLATE_EXAMPLE;
+      return current;
+    });
   };
 
   const closeTextRegistration = () => {
@@ -174,7 +200,14 @@ export function SelectScreen({ navigation }: Props) {
     if (!draftName.trim() || textPreview.errors.length > 0 || saving) return;
     try {
       setSaving(true);
-      const item = await addTextItem(draftName, textSource, textTint, textEmoji);
+      const item = await addTextItem({
+        label: draftName,
+        templateSource: textSource,
+        emoji: textEmoji,
+        variant: textVariant,
+        tint: textTint,
+        stampColor,
+      });
       toggleItemChoice(item.id);
       setTextDraftOpen(false);
       resetTextDraft();
@@ -446,6 +479,35 @@ export function SelectScreen({ navigation }: Props) {
               <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
                 <Text style={styles.modalTitle}>새 텍스트 등록</Text>
 
+                <Text style={styles.inputLabel}>종류</Text>
+                <View style={styles.variantRow}>
+                  {(
+                    [
+                      { key: 'card', label: '카드', hint: '배경이 있는 다이어리' },
+                      { key: 'stamp', label: '타임스탬프', hint: '필름 날짜 각인' },
+                    ] as const
+                  ).map((option) => (
+                    <Pressable
+                      key={option.key}
+                      onPress={() => changeVariant(option.key)}
+                      style={[
+                        styles.variantChip,
+                        textVariant === option.key && styles.variantChipOn,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.variantLabel,
+                          textVariant === option.key && styles.variantLabelOn,
+                        ]}
+                      >
+                        {option.label}
+                      </Text>
+                      <Text style={styles.variantHint}>{option.hint}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+
                 <Text style={styles.inputLabel}>이름</Text>
                 <TextInput
                   value={draftName}
@@ -461,7 +523,8 @@ export function SelectScreen({ navigation }: Props) {
                 <Text style={styles.syntaxHint}>
                   첫 줄은 카드 제목 · {TOKEN_NICKNAME} 닉네임 · {TOKEN_DATE} 오늘 날짜{'\n'}
                   {`선택지는 ${CHOICE_SEPARATOR} 로 구분 (예: 식단 good ${CHOICE_SEPARATOR} bad)`}{'\n'}
-                  {`자유 입력 칸은 ${TOKEN_INPUT} (예: 특이사항 ${TOKEN_INPUT})`}
+                  {`자유 입력 칸은 ${TOKEN_INPUT} (예: 특이사항 ${TOKEN_INPUT})`}{'\n'}
+                  사진이 찍힌 때: {TOKEN_SHOT_DATETIME} · {TOKEN_SHOT_DATE} · {TOKEN_SHOT_TIME}
                 </Text>
                 <TextInput
                   value={textSource}
@@ -474,6 +537,26 @@ export function SelectScreen({ navigation }: Props) {
                   autoCorrect={false}
                 />
 
+                {isStamp ? (
+                  <>
+                    <Text style={styles.inputLabel}>글자색</Text>
+                    <View style={styles.tintRow}>
+                      {STAMP_COLORS.map((color) => (
+                        <Pressable
+                          key={color.id}
+                          accessibilityLabel={`${color.label} 글자색`}
+                          onPress={() => setStampColor(color.value)}
+                          style={[
+                            styles.tintSwatch,
+                            { backgroundColor: color.value },
+                            stampColor === color.value && styles.tintSwatchOn,
+                          ]}
+                        />
+                      ))}
+                    </View>
+                  </>
+                ) : (
+                  <>
                 <Text style={styles.inputLabel}>이모지</Text>
                 <View style={styles.tintRow}>
                   {CARD_EMOJIS.map((emoji) => (
@@ -506,17 +589,27 @@ export function SelectScreen({ navigation }: Props) {
                     />
                   ))}
                 </View>
+                  </>
+                )}
 
                 <Text style={styles.inputLabel}>미리보기</Text>
                 {textPreview.template ? (
-                  <View style={styles.previewWrap}>
-                    <TextCard
-                      template={textPreview.template}
-                      nickname={profile.nickname}
-                      choices={{}}
-                      notes={{}}
-                    />
-                  </View>
+                  <>
+                    {/* 타임스탬프는 사진 위에 얹히므로 어두운 바탕에서 확인해야 실제와 비슷하다. */}
+                    <View style={[styles.previewWrap, isStamp && styles.previewWrapStamp]}>
+                      <TextCard
+                        template={textPreview.template}
+                        nickname={profile.nickname}
+                        choices={{}}
+                        notes={{}}
+                      />
+                    </View>
+                    {isStamp ? (
+                      <Text style={styles.previewNote}>
+                        지금 시각으로 보여줍니다 · 실제로는 사진이 찍힌 시각이 들어가요
+                      </Text>
+                    ) : null}
+                  </>
                 ) : (
                   <View style={styles.errorBox}>
                     {textPreview.errors.map((error) => (
@@ -809,6 +902,43 @@ const makeStyles = (colors: ThemeColors) =>
     previewWrap: {
       alignItems: 'center',
       paddingVertical: spacing.sm,
+    },
+    previewWrapStamp: {
+      backgroundColor: '#2b2b30',
+      borderRadius: radius.thumb,
+      paddingVertical: spacing.lg,
+    },
+    variantRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+    },
+    variantChip: {
+      flex: 1,
+      borderRadius: radius.thumb,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.sm,
+      alignItems: 'center',
+      gap: 2,
+    },
+    variantChipOn: {
+      borderWidth: 2.5,
+      borderColor: colors.primary,
+      backgroundColor: colors.tintPink,
+    },
+    variantLabel: {
+      fontFamily: fonts.title,
+      fontSize: 14,
+      color: colors.textMuted,
+    },
+    variantLabelOn: {
+      color: colors.primaryDeep,
+    },
+    variantHint: {
+      fontFamily: fonts.body,
+      fontSize: 11,
+      color: colors.textMuted,
     },
     errorBox: {
       backgroundColor: colors.tintPink,

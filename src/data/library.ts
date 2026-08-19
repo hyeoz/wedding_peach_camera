@@ -8,7 +8,7 @@
  */
 import type { ImageSourcePropType } from 'react-native';
 
-import { TEXT_TEMPLATES } from '@/data/textTemplates';
+import { TEXT_TEMPLATES, type TextVariant } from '@/data/textTemplates';
 
 export type OverlayMode = 'frame' | 'sticker' | 'text';
 /** 사용자가 직접 등록할 수 있는 모드. 세 모드 모두 등록형이다. */
@@ -29,6 +29,10 @@ export interface LibraryItem {
   templateSource?: string;
   /** 텍스트 모드 전용 — 카드 배경색. */
   tint?: string;
+  /** 텍스트 모드 전용 — 카드형/타임스탬프형. */
+  variant?: TextVariant;
+  /** 텍스트 모드 전용 — 타임스탬프 글자색. */
+  stampColor?: string;
   /** 앱에 내장된 항목이면 true. 내장 항목은 삭제할 수 없다. */
   builtIn?: boolean;
 }

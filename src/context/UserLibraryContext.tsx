@@ -21,6 +21,7 @@ import {
   DEFAULT_CARD_TINT,
   findBuiltInTemplate,
   type TextTemplate,
+  type TextVariant,
 } from '@/data/textTemplates';
 import {
   EMPTY_USER_LIBRARY,
@@ -31,6 +32,18 @@ import {
   type UserLibraryState,
 } from '@/storage/userLibrary';
 
+/** 텍스트 항목 등록에 필요한 값. 옵션이 늘어 인자 나열 대신 객체로 받는다. */
+export interface TextItemDraft {
+  label: string;
+  templateSource: string;
+  emoji: string;
+  variant: TextVariant;
+  /** card 변형의 배경색. */
+  tint: string;
+  /** stamp 변형의 글자색. */
+  stampColor: string;
+}
+
 interface UserLibraryContextValue {
   items: UserLibraryState;
   ready: boolean;
@@ -39,12 +52,7 @@ interface UserLibraryContextValue {
   /** 텍스트 카드 렌더에 쓰는 템플릿 조회 (내장 + 사용자 등록). */
   getTemplate: (id: string) => TextTemplate | undefined;
   addItem: (mode: ImageLibraryMode, label: string, sourceUri: string) => Promise<LibraryItem>;
-  addTextItem: (
-    label: string,
-    templateSource: string,
-    tint: string,
-    emoji: string,
-  ) => Promise<LibraryItem>;
+  addTextItem: (draft: TextItemDraft) => Promise<LibraryItem>;
   removeItem: (mode: UserLibraryMode, id: string) => Promise<void>;
 }
 
@@ -90,6 +98,8 @@ export function UserLibraryProvider({ children }: { children: React.ReactNode })
         label: item.label,
         tint: item.tint ?? DEFAULT_CARD_TINT,
         emoji: item.emoji,
+        variant: item.variant,
+        stampColor: item.stampColor,
       });
       return template ?? undefined;
     },
@@ -120,11 +130,19 @@ export function UserLibraryProvider({ children }: { children: React.ReactNode })
   );
 
   const addTextItem = useCallback(
-    async (label: string, templateSource: string, tint: string, emoji: string) => {
+    async (draft: TextItemDraft) => {
+      const { label, templateSource, emoji, variant, tint, stampColor } = draft;
       const id = `text-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
       // 저장 전에 컴파일해 본다. 깨진 템플릿이 목록에 남지 않게 하기 위함.
-      const { errors } = parseTemplateSource(templateSource, { id, label, tint, emoji });
+      const { errors } = parseTemplateSource(templateSource, {
+        id,
+        label,
+        tint,
+        emoji,
+        variant,
+        stampColor,
+      });
       if (errors.length > 0) throw new Error(errors[0]);
 
       const item: LibraryItem = {
@@ -133,6 +151,8 @@ export function UserLibraryProvider({ children }: { children: React.ReactNode })
         emoji: emoji || DEFAULT_CARD_EMOJI,
         templateSource,
         tint,
+        variant,
+        stampColor,
       };
       const next = { ...items, text: [...items.text, item] };
       await saveUserLibrary(next);

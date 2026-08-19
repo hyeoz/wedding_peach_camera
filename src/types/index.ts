@@ -1,6 +1,8 @@
 /**
  * 앱 전역 핵심 타입.
  */
+import type { TakenAtSource } from '@/utils/exif';
+
 export type { OverlayMode } from '@/data/library';
 
 /** 촬영/선택된 사진. */
@@ -8,6 +10,10 @@ export interface Photo {
   uri: string;
   width?: number;
   height?: number;
+  /** 촬영 일시(epoch ms). EXIF → 앨범 등록 시각 → 현재 시각 순으로 확정된다. */
+  takenAt?: number;
+  /** takenAt 을 어디서 얻었는지. 'exif' 가 아니면 근사치다. */
+  takenAtSource?: TakenAtSource;
 }
 
 /**

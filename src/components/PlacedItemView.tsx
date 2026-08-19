@@ -24,6 +24,8 @@ interface PlacedItemViewProps {
   item: PlacedItem;
   active: boolean;
   nickname: string;
+  /** 사진 촬영 일시(epoch ms) — 타임스탬프 토큰 치환용. */
+  takenAt?: number;
   /** 사용자 라이브러리에서 조회한 스티커 이미지/이름. */
   sticker?: LibraryItem;
   /** 캡처/결과 렌더 시 선택 UI(점선·핸들·삭제)를 숨긴다. */
@@ -48,6 +50,7 @@ export function PlacedItemView({
   item,
   active,
   nickname,
+  takenAt,
   sticker,
   hideChrome = false,
   canvasOrigin,
@@ -153,6 +156,7 @@ export function PlacedItemView({
             <TextCard
               template={template}
               nickname={nickname}
+              takenAt={takenAt}
               choices={item.choices ?? {}}
               notes={item.notes ?? {}}
               editable={showChrome}

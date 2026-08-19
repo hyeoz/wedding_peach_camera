@@ -22,6 +22,12 @@ export interface TextLine {
   options?: string[];
 }
 
+/**
+ * card  = 배경·테두리가 있는 다이어리 카드 (기본)
+ * stamp = 배경 없이 글자만 얹는 필름 카메라 날짜 각인풍
+ */
+export type TextVariant = 'card' | 'stamp';
+
 export interface TextTemplate {
   id: string;
   /** 라이브러리 썸네일 라벨. */
@@ -30,13 +36,27 @@ export interface TextTemplate {
   emoji: string;
   /**
    * 헤더 문구. 토큰:
-   * {{nickname}} → 프로필 닉네임, {{date}} → 오늘 날짜.
+   * {{nickname}} → 프로필 닉네임, {{date}} → 오늘 날짜,
+   * {{shotDate}} · {{shotTime}} · {{shotDateTime}} · {{shotFilm}} → 사진 촬영 일시.
    */
   headerTemplate: string;
   lines: TextLine[];
   /** 카드 배경 틴트. */
   tint: string;
+  /** 렌더 방식. 미지정이면 card. */
+  variant?: TextVariant;
+  /** stamp 변형의 글자색. */
+  stampColor?: string;
 }
+
+/** 타임스탬프 글자색 선택지. 필름 각인은 주황이 기본이다. */
+export const STAMP_COLORS = [
+  { id: 'orange', label: '주황', value: '#ff8a3d' },
+  { id: 'yellow', label: '노랑', value: '#ffd24a' },
+  { id: 'white', label: '흰색', value: '#ffffff' },
+] as const;
+
+export const DEFAULT_STAMP_COLOR = STAMP_COLORS[0].value;
 
 /** 카드 배경으로 고를 수 있는 색. 등록 화면의 색 선택지로도 쓴다. */
 export const CARD_TINTS = [
@@ -94,6 +114,27 @@ export const TEXT_TEMPLATES: TextTemplate[] = [
     headerTemplate: '{{nickname}}님의 {{date}}',
     tint: '#fffaf0',
     lines: [],
+  },
+  {
+    id: 't4',
+    label: '타임스탬프',
+    emoji: '📷',
+    // 사진의 EXIF 촬영 일시를 그대로 각인한다.
+    headerTemplate: '{{shotDateTime}}',
+    tint: 'transparent',
+    lines: [],
+    variant: 'stamp',
+    stampColor: DEFAULT_STAMP_COLOR,
+  },
+  {
+    id: 't5',
+    label: '필름 날짜',
+    emoji: '🎞️',
+    headerTemplate: '{{shotFilm}}',
+    tint: 'transparent',
+    lines: [],
+    variant: 'stamp',
+    stampColor: DEFAULT_STAMP_COLOR,
   },
 ];
 
