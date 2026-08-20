@@ -67,6 +67,14 @@ else
   err "타입 에러:"; sed 's/^/      /' /tmp/wepicam-typecheck.log | head -20
 fi
 
+step "5-1. 테스트"
+if npm run --silent test >/tmp/wepicam-test.log 2>&1; then
+  PASSED="$(grep -oE 'pass [0-9]+' /tmp/wepicam-test.log | head -1 | awk '{print $2}')"
+  ok "${PASSED:-?}개 통과 / 실패 없음"
+else
+  err "테스트 실패:"; grep -E "✖|not ok|Error" /tmp/wepicam-test.log | sed 's/^/      /' | head -20
+fi
+
 step "6. Git 상태"
 if git rev-parse --git-dir >/dev/null 2>&1; then
   BRANCH="$(git symbolic-ref --short -q HEAD || echo '(브랜치 없음/detached)')"

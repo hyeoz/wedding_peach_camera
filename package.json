@@ -6,6 +6,7 @@
     "start": "expo start",
     "ios": "expo start --ios",
     "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test \"tests/**/*.test.ts\"",
     "doctor": "npx expo-doctor",
     "deploy:check": "node scripts/assert-eas-owner.mjs",
     "build:ios:store": "npx --yes eas-cli@22.0.0 build --platform ios --profile production",
@@ -47,6 +48,7 @@
     "@babel/core": "^7.26.0",
     "@types/react": "~19.1.0",
     "babel-preset-expo": "~54.0.12",
+    "tsx": "^4.23.12",
     "typescript": "~5.9.2"
   },
   "private": true

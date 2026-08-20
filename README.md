@@ -114,6 +114,15 @@ npm run ios / android   # 시뮬레이터/에뮬레이터
 
 빌드 검증: `npm run typecheck` (타입) / `npx expo export -p ios` (번들) 통과 확인됨.
 
+## 테스트
+
+```bash
+npm test        # Node 내장 러너(node:test) + tsx. 별도 설정 파일 없음
+```
+
+React Native 없이 돌아가는 순수 로직만 다룬다 (경로 저장 형식, 캔버스 비율 계산,
+텍스트 카드 DSL 파서, EXIF, 테마 팔레트). 자세한 범위는 [`tests/README.md`](tests/README.md).
+
 ## 디렉터리 구조
 
 ```
