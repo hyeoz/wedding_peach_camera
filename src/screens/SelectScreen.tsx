@@ -336,7 +336,7 @@ export function SelectScreen({ navigation }: Props) {
                       <View key={item.id} style={{ width: cellWidth }}>
                         <Pressable onPress={() => onSelect(item.id)}>
                           <Thumb
-                            emoji={item.emoji}
+                            emoji={item.missing ? '🚫' : item.emoji}
                             source={sourceForItem(item)}
                             style={[styles.thumb, selected && styles.thumbSelected]}
                             tint={colors.white}
@@ -372,6 +372,12 @@ export function SelectScreen({ navigation }: Props) {
                         <Text numberOfLines={1} style={styles.itemLabel}>
                           {item.label}
                         </Text>
+                        {/* 파일이 사라진 항목. 지울지 말지는 사용자가 정하도록 표시만 한다. */}
+                        {item.missing ? (
+                          <Text numberOfLines={2} style={styles.missingLabel}>
+                            이미지를 찾을 수 없어요
+                          </Text>
+                        ) : null}
                       </View>
                     );
                   })}
@@ -810,6 +816,14 @@ const makeStyles = (colors: ThemeColors) =>
       color: colors.textMuted,
       textAlign: 'center',
       marginTop: 6,
+    },
+    missingLabel: {
+      fontFamily: fonts.body,
+      fontSize: 10,
+      lineHeight: 14,
+      color: colors.primaryDeep,
+      textAlign: 'center',
+      marginTop: 2,
     },
     footer: {
       padding: spacing.lg,

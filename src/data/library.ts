@@ -35,6 +35,11 @@ export interface LibraryItem {
   stampColor?: string;
   /** 앱에 내장된 항목이면 true. 내장 항목은 삭제할 수 없다. */
   builtIn?: boolean;
+  /**
+   * 등록 이미지 파일을 찾지 못한 항목.
+   * 경로는 그대로 두고 표시만 플레이스홀더로 바꾼다 (사용자가 직접 지우도록).
+   */
+  missing?: boolean;
 }
 
 /** 화면 상단 타이틀. */
@@ -58,5 +63,7 @@ export function getBuiltInItems(mode: OverlayMode): LibraryItem[] {
 }
 
 export function sourceForItem(item: LibraryItem | undefined): ImageSourcePropType | undefined {
+  // 파일이 없는 항목에 uri 를 그대로 넘기면 빈 칸이 뜬다. 플레이스홀더로 넘긴다.
+  if (item?.missing) return undefined;
   return item?.source ?? (item?.uri ? { uri: item.uri } : undefined);
 }
