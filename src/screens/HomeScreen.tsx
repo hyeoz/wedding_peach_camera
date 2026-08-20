@@ -53,7 +53,7 @@ export function HomeScreen({ navigation }: Props) {
     {
       mode: 'frame',
       title: '프레임',
-      desc: '사진이 프레임 중앙 영역에 들어가요',
+      desc: '사진 위에 프레임을 올리고 크기·위치를 맞춰요',
       tint: colors.tintPink,
       accent: colors.primary,
       titleColor: colors.primaryDeeper,
