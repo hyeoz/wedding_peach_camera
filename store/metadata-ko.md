@@ -53,6 +53,8 @@
 
 프레임
 사진 위를 덮는 테두리를 씌웁니다. 투명 배경 PNG를 쓰면 가장 예쁘게 어울려요.
+원본 비율 그대로 올라가고, 스티커처럼 옮기고 키우고 돌릴 수 있습니다.
+마음에 안 들면 '원래대로'를 눌러 처음 자리로 되돌리세요.
 
 스티커
 사진 위 원하는 자리에 자유롭게 올립니다. 손가락으로 옮기고, 키우고, 돌릴 수 있어요.
@@ -175,8 +177,9 @@ iPhone과 iPad에서 모두 쓸 수 있습니다.
 이런 점을 봐 주세요
 · 카메라/사진 권한을 허용, 거부, 다시 허용했을 때 안내와 복구 동선이 자연스러운지
 · 프레임·스티커를 직접 등록하고 이름을 바꾸거나 삭제한 뒤, 앱을 다시 열어도 남아 있는지
-· 편집 화면에서 스티커를 옮기고 키우고 돌리는 조작이 매끄러운지
-· 완성 화면에서 사진이 잘리거나 검은 여백이 생기지 않는지
+· 편집 화면에서 프레임·스티커를 옮기고 키우고 돌리는 조작이 매끄러운지
+· 편집 화면 사진이 원본 비율 그대로 보이고, 저장한 결과도 잘리지 않는지
+· 저장한 사진이 원본 해상도 그대로인지 (사진 앱에서 크게 확대해 확인)
 · 저장과 공유가 정상 동작하는지
 · iPad에서 화면 배치가 어색하지 않은지
 
@@ -206,6 +209,9 @@ iPhone과 iPad에서 모두 쓸 수 있습니다.
 | 문구에서 주장한 것 | 확인한 코드 |
 |---|---|
 | 프레임 / 스티커 / 텍스트 3개 모드 | `src/data/library.ts` `OverlayMode`, `src/screens/HomeScreen.tsx` |
+| 프레임도 옮기고 키우고 돌릴 수 있음 | `src/components/PlacedItemView.tsx` — `kind: 'frame'` 도 같은 제스처를 쓴다 |
+| 편집·저장이 사진 원본 비율 | `src/screens/EditScreen.tsx` — 캔버스 = `fitInside(stage, 사진 비율)` |
+| 원본 해상도로 저장 | `src/components/ExportCanvas.tsx` — 사진 픽셀 크기로 다시 그린 뒤 캡처 |
 | 프레임·스티커는 내장 없이 사용자 등록형 | `src/data/library.ts` `getBuiltInItems()` — text 외에는 `[]` 반환 |
 | 등록 항목이 앱 재실행 후에도 유지 | `src/storage/userLibrary.ts`, `src/context/UserLibraryContext.tsx` |
 | 즐겨찾기 | `src/storage/favorites.ts`, `SessionContext.toggleFavorite` |

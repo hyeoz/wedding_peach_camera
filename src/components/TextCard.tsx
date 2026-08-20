@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import {
@@ -17,7 +17,7 @@ import {
   formatShotFilm,
   formatShotTime,
 } from '@/utils/exif';
-import { fonts, radius, useTheme, useThemedStyles, type ThemeColors } from '@/theme';
+import { fonts, radius, useTheme, type ThemeColors } from '@/theme';
 
 interface TextCardProps {
   template: TextTemplate;
@@ -28,6 +28,12 @@ interface TextCardProps {
   notes: Record<string, string>;
   /** 편집 가능(선택된 카드) 여부. */
   editable?: boolean;
+  /**
+   * 카드 전체 배율. 글자 크기·여백·테두리를 모두 곱해 **다시 레이아웃**한다.
+   * transform scale 과 달리 확대해도 글자가 뭉개지지 않아, 원본 해상도로 합성할 때
+   * 이 값만 키우면 그대로 선명해진다.
+   */
+  sizeScale?: number;
   onToggleChoice?: (lineKey: string, option: string) => void;
   onEditNote?: (lineKey: string) => void;
 }
@@ -43,11 +49,12 @@ export function TextCard({
   choices,
   notes,
   editable = false,
+  sizeScale = 1,
   onToggleChoice,
   onEditNote,
 }: TextCardProps) {
   const colors = useTheme();
-  const styles = useThemedStyles(makeStyles);
+  const styles = useMemo(() => makeStyles(colors, sizeScale), [colors, sizeScale]);
 
   // 촬영 시각을 못 받은 경우(등록 미리보기 등)에는 현재 시각으로 보여준다.
   const shotMs = takenAt ?? Date.now();
@@ -121,61 +128,65 @@ export function TextCard({
   );
 }
 
-const makeStyles = (colors: ThemeColors) =>
+/**
+ * `s` 는 카드 배율. 모든 치수에 곱해 레이아웃 자체를 키운다.
+ * 색상·정렬처럼 크기와 무관한 값은 그대로 둔다.
+ */
+const makeStyles = (colors: ThemeColors, s: number) =>
   StyleSheet.create({
   /**
    * 필름 카메라 날짜 각인 느낌.
    * 배경·테두리 없이 글자만 올리고, 어떤 사진 위에서도 읽히도록 발광을 준다.
    */
   stampWrap: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: 6 * s,
+    paddingVertical: 2 * s,
   },
   stampText: {
     fontFamily: fonts.body,
-    fontSize: 17,
-    letterSpacing: 1.2,
+    fontSize: 17 * s,
+    letterSpacing: 1.2 * s,
     textShadowColor: 'rgba(255, 96, 0, 0.55)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 7,
+    textShadowRadius: 7 * s,
   },
   card: {
-    minWidth: 200,
-    maxWidth: 260,
-    borderRadius: radius.thumb,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderWidth: 1.5,
+    minWidth: 200 * s,
+    maxWidth: 260 * s,
+    borderRadius: radius.thumb * s,
+    paddingVertical: 12 * s,
+    paddingHorizontal: 14 * s,
+    borderWidth: 1.5 * s,
     borderColor: colors.border,
   },
   header: {
     fontFamily: fonts.cute,
-    fontSize: 18,
+    fontSize: 18 * s,
     color: colors.primaryDeep,
   },
   divider: {
-    height: 1.5,
+    height: 1.5 * s,
     backgroundColor: colors.border,
-    marginVertical: 8,
-    borderRadius: 1,
+    marginVertical: 8 * s,
+    borderRadius: 1 * s,
   },
   line: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: 4 * s,
     flexWrap: 'wrap',
   },
   check: {
     fontFamily: fonts.cute,
-    fontSize: 15,
+    fontSize: 15 * s,
     color: colors.primary,
-    marginRight: 4,
+    marginRight: 4 * s,
   },
   label: {
     fontFamily: fonts.cute,
-    fontSize: 16,
+    fontSize: 16 * s,
     color: colors.text,
-    marginRight: 6,
+    marginRight: 6 * s,
   },
   options: {
     flexDirection: 'row',
@@ -183,13 +194,13 @@ const makeStyles = (colors: ThemeColors) =>
   },
   slash: {
     fontFamily: fonts.cute,
-    fontSize: 15,
+    fontSize: 15 * s,
     color: colors.textMuted,
-    marginHorizontal: 4,
+    marginHorizontal: 4 * s,
   },
   option: {
     fontFamily: fonts.cute,
-    fontSize: 16,
+    fontSize: 16 * s,
     color: colors.textMuted,
   },
   optionOn: {
@@ -198,11 +209,11 @@ const makeStyles = (colors: ThemeColors) =>
   },
   noteWrap: {
     flex: 1,
-    minWidth: 80,
+    minWidth: 80 * s,
   },
   note: {
     fontFamily: fonts.cute,
-    fontSize: 16,
+    fontSize: 16 * s,
     color: colors.text,
   },
   notePlaceholder: {

@@ -26,6 +26,19 @@ import {
 } from '@/storage/favorites';
 import type { PlacedItem, Photo } from '@/types';
 
+/** 배치 항목을 추가할 때 기본값 대신 지정할 수 있는 값들. */
+export type PlacedItemInit = Partial<Omit<PlacedItem, 'id' | 'refId'>>;
+
+/**
+ * 프레임은 항상 스티커·텍스트 위에 보이도록 배열 끝으로 보낸다.
+ * (같은 종류끼리의 순서는 그대로 유지된다.)
+ */
+function withFrameOnTop(items: PlacedItem[]): PlacedItem[] {
+  const frames = items.filter((item) => item.kind === 'frame');
+  if (frames.length === 0) return items;
+  return [...items.filter((item) => item.kind !== 'frame'), ...frames];
+}
+
 interface SessionContextValue {
   mode: OverlayMode;
   selectedFrameId: string | null;
@@ -42,7 +55,7 @@ interface SessionContextValue {
   toggleFavorite: (mode: OverlayMode, id: string) => void;
   forgetLibraryItem: (mode: UserLibraryMode, id: string) => void;
 
-  addPlacedItem: (refId: string) => void;
+  addPlacedItem: (refId: string, init?: PlacedItemInit) => void;
   updatePlacedItem: (id: string, patch: Partial<PlacedItem>) => void;
   deletePlacedItem: (id: string) => void;
   setActiveItem: (id: string | null) => void;
@@ -99,14 +112,16 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       setSelectedFrameId((current) => (current === id ? null : current));
     } else {
       setSelectedItemIds((current) => current.filter((itemId) => itemId !== id));
-      // 캔버스에 이미 올려둔 항목도 같이 치운다. 남겨두면 원본이 사라져
-      // 스티커는 빈 칸으로, 텍스트 카드는 아예 렌더되지 않는 유령이 된다.
-      const orphanIds = placedItems.filter((placed) => placed.refId === id).map((p) => p.id);
-      if (orphanIds.length > 0) {
-        setPlacedItems((current) => current.filter((placed) => placed.refId !== id));
-        setActiveItemId((current) => (current && orphanIds.includes(current) ? null : current));
-      }
     }
+
+    // 캔버스에 이미 올려둔 항목도 같이 치운다. 남겨두면 원본이 사라져
+    // 프레임·스티커는 빈 칸으로, 텍스트 카드는 아예 렌더되지 않는 유령이 된다.
+    const orphanIds = placedItems.filter((placed) => placed.refId === id).map((p) => p.id);
+    if (orphanIds.length > 0) {
+      setPlacedItems((current) => current.filter((placed) => placed.refId !== id));
+      setActiveItemId((current) => (current && orphanIds.includes(current) ? null : current));
+    }
+
     setFavorites((prev) => {
       if (!prev[itemMode].includes(id)) return prev;
       const next = { ...prev, [itemMode]: prev[itemMode].filter((itemId) => itemId !== id) };
@@ -115,23 +130,30 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     });
   }, [placedItems]);
 
+  /**
+   * 캔버스에 항목을 올린다.
+   * 기본 위치는 캔버스 대비 비율이라 화면 크기와 무관하게 같은 자리에 놓인다.
+   * 프레임처럼 계산된 시작값이 필요한 경우 `init` 으로 덮어쓴다.
+   */
   const addPlacedItem = useCallback(
-    (refId: string) => {
+    (refId: string, init?: PlacedItemInit) => {
       placedCounter.current += 1;
       const n = placedCounter.current;
       const id = `p${n}`;
+      const isText = mode === 'text';
       const item: PlacedItem = {
         id,
-        kind: mode === 'text' ? 'text' : 'sticker',
+        kind: isText ? 'text' : 'sticker',
         refId,
-        x: mode === 'text' ? 40 + (n % 3) * 16 : 110 + (n % 3) * 26,
-        y: 130 + (n % 4) * 22,
+        x: (isText ? 0.1 : 0.3) + (n % 3) * (isText ? 0.045 : 0.07),
+        y: 0.25 + (n % 4) * 0.045,
         scale: 1,
         rotation: 0,
         choices: {},
         notes: {},
+        ...init,
       };
-      setPlacedItems((prev) => [...prev, item]);
+      setPlacedItems((prev) => withFrameOnTop([...prev, item]));
       setActiveItemId(id);
     },
     [mode],

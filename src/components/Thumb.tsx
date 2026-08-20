@@ -19,7 +19,7 @@ interface ThumbProps {
   label?: string;
   borderRadius?: number;
   style?: StyleProp<ViewStyle>;
-  /** 이미지 렌더 방식. 스티커=contain, 사진=cover, 프레임 미리보기=stretch. */
+  /** 이미지 렌더 방식. 스티커·프레임=contain, 사진=cover. */
   resizeMode?: 'cover' | 'contain' | 'stretch';
   /** 플레이스홀더 배경 틴트. */
   tint?: string;

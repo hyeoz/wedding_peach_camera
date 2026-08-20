@@ -53,7 +53,6 @@ import {
   radius,
   shadow,
   spacing,
-  useCanvasAspectRatio,
   useContentBounds,
   useResponsive,
   useTheme,
@@ -69,7 +68,6 @@ export function SelectScreen({ navigation }: Props) {
   const styles = useThemedStyles(makeStyles);
   const bounds = useContentBounds();
   const { contentWidth, gridColumns, gutter, height, modalMaxWidth } = useResponsive();
-  const canvasAspectRatio = useCanvasAspectRatio();
   const cellWidth = gridCellWidth(contentWidth, gridColumns, COLUMN_GAP, gutter);
   const {
     mode,
@@ -258,7 +256,9 @@ export function SelectScreen({ navigation }: Props) {
                 <Text style={styles.registerTitle}>내 {modeLabel(mode)} 만들기</Text>
                 <Text style={styles.registerHint}>
                   이미지를 고르고 원하는 이름을 붙여 등록하세요
-                  {mode === 'frame' ? '\n투명 PNG · 세로로 긴 비율 권장 (사진 영역에 꽉 차게 늘어나요)' : ''}
+                  {mode === 'frame'
+                    ? '\n투명 PNG 권장 · 원본 비율 그대로 올라가고, 편집 화면에서 크기·회전을 조절할 수 있어요'
+                    : ''}
                 </Text>
               </View>
               <PillButton
@@ -401,21 +401,19 @@ export function SelectScreen({ navigation }: Props) {
               {draftUri ? (
                 <>
                   {/*
-                    프레임은 편집 캔버스를 꽉 채우도록 늘어난다(FrameOverlay 의 stretch).
-                    미리보기도 같은 비율·같은 방식으로 보여줘야 등록 후에 놀라지 않는다.
+                    프레임은 원본 비율 그대로 사진 위에 올라간다(FrameOverlay 의 contain).
+                    미리보기도 늘리지 않고 그대로 보여줘야 등록 후에 놀라지 않는다.
                   */}
                   <Thumb
                     source={{ uri: draftUri }}
-                    resizeMode={isFrame ? 'stretch' : 'contain'}
+                    resizeMode="contain"
                     tint={colors.tintPink}
-                    style={[
-                      styles.modalPreview,
-                      isFrame && { aspectRatio: canvasAspectRatio, height: undefined },
-                    ]}
+                    style={styles.modalPreview}
                   />
                   {isFrame ? (
                     <Text style={styles.previewNote}>
-                      실제 사진 영역 비율로 보여줍니다 · 비율이 다르면 이렇게 늘어나요
+                      원본 비율 그대로 보여줍니다 · 편집 화면에서 사진을 덮는 크기로 올라가고,
+                      거기서 옮기고 돌리고 키울 수 있어요
                     </Text>
                   ) : null}
                 </>

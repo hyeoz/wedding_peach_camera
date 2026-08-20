@@ -6,7 +6,6 @@
  */
 import { useMemo } from 'react';
 import { useWindowDimensions, type ViewStyle } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { spacing } from './tokens';
 
@@ -69,38 +68,6 @@ export function useResponsive(): Responsive {
 export function useContentBounds(): ViewStyle {
   const { maxContentWidth } = useResponsive();
   return { width: '100%', maxWidth: maxContentWidth, alignSelf: 'center' };
-}
-
-/**
- * 편집 화면 캔버스의 가로세로 비(width / height) 추정값.
- *
- * 캔버스(EditScreen 의 `shot`)는 flex:1 이라 고정 비율이 없고 화면 크기에 따라
- * 달라진다. 프레임 등록 미리보기를 실제와 같은 비율로 보여주려면 그 값이 필요한데,
- * 다른 화면에서는 캔버스를 직접 측정할 수 없으므로 EditScreen 이 쓰는 레이아웃
- * 상수를 그대로 적용해 되짚는다.
- *
- * 프레임 모드 기준 세로 구성:
- *   container paddingTop → TopBar → shot(marginBottom) → actions(paddingBottom)
- * 폰트 크기에 따라 TopBar 높이가 미세하게 달라질 수 있어 정확한 값이 아니라
- * 근사치다. 미리보기 용도로는 충분하다.
- */
-const TOP_BAR_HEIGHT = 44;
-const ACTIONS_HEIGHT = 48;
-
-export function useCanvasAspectRatio(): number {
-  const { width, height } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
-  const { maxContentWidth } = useResponsive();
-
-  return useMemo(() => {
-    const chromeV =
-      spacing.sm + TOP_BAR_HEIGHT + spacing.md + ACTIONS_HEIGHT + spacing.md;
-    const canvasW = Math.min(width, maxContentWidth) - spacing.lg * 2;
-    const canvasH = height - insets.top - insets.bottom - chromeV;
-
-    if (canvasW <= 0 || canvasH <= 0) return 3 / 4;
-    return canvasW / canvasH;
-  }, [width, height, insets.top, insets.bottom, maxContentWidth]);
 }
 
 /** 열 수와 간격에 맞춰 그리드 셀의 실제 폭(pt)을 계산한다. */
