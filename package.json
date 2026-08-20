@@ -13,7 +13,9 @@
     "submit:ios": "npx --yes eas-cli@22.0.0 submit --platform ios --profile production",
     "release:check": "node scripts/release.mjs --dry-run",
     "release:ios": "node scripts/release.mjs",
-    "release:ios:review": "node scripts/release.mjs --submit-for-review"
+    "release:ios:review": "node scripts/release.mjs --submit-for-review",
+    "release:local:check": "node scripts/local-release-ios.mjs --dry-run",
+    "release:local": "node scripts/local-release-ios.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/gaegu": "^0.4.1",

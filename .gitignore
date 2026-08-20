@@ -37,6 +37,9 @@ yarn-error.*
 # 릴리스 시크릿 (ASC API 키 ID/Issuer/경로) — 절대 커밋 금지
 .env.release
 
+# 로컬 iOS 릴리스 산출물 (scripts/local-release-ios.mjs)
+build-ios/
+
 # typescript
 *.tsbuildinfo
 
