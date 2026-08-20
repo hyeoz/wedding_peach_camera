@@ -384,6 +384,27 @@ function preflight(config) {
   ok(`ASC API 키: ${env.ASC_KEY_ID}`);
   ok(`앱 Apple ID: ${config.appId} / 팀: ${config.teamId}`);
 
+  /**
+   * 배포 인증서는 로그인 키체인에 있고, 개인 키 ACL 이 codesign 을 아직 신뢰하지
+   * 않으면 export 단계에서 승인 창이 떠 **사람이 누를 때까지 멈춘다**.
+   * 자동으로 뚫을 방법이 없으니(키체인 비밀번호가 필요하다) 미리 알려만 준다.
+   */
+  const identities = spawnSync('security', ['find-identity', '-v', '-p', 'codesigning'], {
+    encoding: 'utf8',
+  }).stdout ?? '';
+  const distribution = identities
+    .split('\n')
+    .find((line) => line.includes('Apple Distribution') && line.includes(config.teamId));
+  if (distribution) {
+    ok(`배포 인증서 있음:${distribution.split('"')[1] ? ` ${distribution.split('"')[1]}` : ''}`);
+    warn('처음 실행이면 export 단계에서 키체인 접근 승인 창이 뜹니다 — "항상 허용" 을 누르세요.');
+    info('미리 없애려면(비밀번호 직접 입력): security set-key-partition-list \\');
+    info('  -S apple-tool:,apple:,codesign: -s -k <로그인 비밀번호> ~/Library/Keychains/login.keychain-db');
+  } else {
+    warn(`팀 ${config.teamId} 의 Apple Distribution 인증서가 로컬에 없습니다.`);
+    info('xcodebuild 가 ASC API 키로 새로 발급하려 시도합니다 (실패하면 Xcode 에서 한 번 만들어야 합니다).');
+  }
+
   const dirty = execFileSync('git', ['status', '--porcelain'], { cwd: ROOT, encoding: 'utf8' }).trim();
   if (dirty) warn(`커밋되지 않은 변경 ${dirty.split('\n').length}건 — 지금 상태 그대로 빌드됩니다.`);
   else ok(`깨끗한 작업 트리 (${execFileSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: ROOT, encoding: 'utf8' }).trim()})`);
