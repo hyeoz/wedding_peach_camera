@@ -16,14 +16,10 @@ import {
   useThemedStyles,
   type ThemeColors,
 } from '@/theme';
+import { fitInside, type Size } from '@/utils/layout';
 import { saveToGallery, shareImage } from '@/utils/media';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Result'>;
-
-interface Size {
-  width: number;
-  height: number;
-}
 
 export function ResultScreen({ navigation }: Props) {
   const colors = useTheme();
@@ -299,13 +295,3 @@ const makeStyles = (colors: ThemeColors) =>
     shadowOffset: { width: 0, height: 6 },
   },
 });
-
-function fitInside(area: Size, aspectRatio: number | null): Size | null {
-  if (!aspectRatio || area.width <= 0 || area.height <= 0) return null;
-
-  if (area.width / area.height > aspectRatio) {
-    return { width: area.height * aspectRatio, height: area.height };
-  }
-
-  return { width: area.width, height: area.width / aspectRatio };
-}
