@@ -18,7 +18,24 @@
  *   node scripts/local-release-ios.mjs --upload-only --ipa <경로>
  *   node scripts/local-release-ios.mjs --clean       ios/ 를 지우고 prebuild
  *   node scripts/local-release-ios.mjs --skip-prebuild   기존 ios/ 를 그대로 씀(빠름)
+ *   node scripts/local-release-ios.mjs --skip-archive    build-ios/ 의 아카이브부터 이어서
  *   node scripts/local-release-ios.mjs --build-number 12 빌드 번호 직접 지정
+ *
+ * ── 키체인 승인에서 멈췄을 때 ──────────────────────────────────────────────
+ * 아카이브는 개발용 인증서로 통과하지만, IPA 내보내기는 **배포용 인증서**로 다시
+ * 서명한다. 그 개인 키의 ACL 이 codesign 을 아직 신뢰하지 않으면 승인 창이 뜨고
+ * 사람이 누를 때까지 멈춘다 (로그가 조용해서 원인을 짐작하기 어렵다).
+ *
+ *   방법 1 — 창을 띄워 "항상 허용" 누르기
+ *     node scripts/local-release-ios.mjs --skip-archive
+ *     (승인 창이 뜨면 "항상 허용". 그 뒤로는 자동으로 진행된다)
+ *
+ *   방법 2 — 미리 승인해 두기 (로그인 비밀번호 필요, 창이 아예 안 뜬다)
+ *     security set-key-partition-list -S apple-tool:,apple:,codesign: \
+ *       -s -k <로그인 비밀번호> ~/Library/Keychains/login.keychain-db
+ *     node scripts/local-release-ios.mjs --skip-archive
+ *
+ * 어느 쪽이든 한 번만 해 두면 다음 릴리스부터는 조용히 지나간다.
  *
  * 필요한 환경 변수 (.env.release 또는 셸)
  *   ASC_KEY_ID        App Store Connect API 키 ID
@@ -51,6 +68,7 @@ const BUILD_ONLY = has('--build-only');
 const UPLOAD_ONLY = has('--upload-only');
 const CLEAN = has('--clean');
 const SKIP_PREBUILD = has('--skip-prebuild');
+const SKIP_ARCHIVE = has('--skip-archive');
 const IPA_ARG = valueOf('--ipa');
 const BUILD_NUMBER_ARG = valueOf('--build-number');
 
@@ -412,6 +430,30 @@ function preflight(config) {
 
 // ─── 메인 ────────────────────────────────────────────────────────────────
 
+/** 이미 만들어 둔 아카이브에 박혀 있는 빌드 번호. */
+function archiveBuildNumber() {
+  return execFileSync(
+    '/usr/libexec/PlistBuddy',
+    ['-c', 'Print :ApplicationProperties:CFBundleVersion', join(ARCHIVE_PATH, 'Info.plist')],
+    { encoding: 'utf8' },
+  ).trim();
+}
+
+/** 내보내기 → 업로드 → VALID 대기. 아카이브가 준비된 뒤의 공통 흐름. */
+async function exportUploadFinish(config, buildNumber) {
+  const ipaPath = exportIpa({ teamId: config.teamId });
+
+  if (BUILD_ONLY) {
+    step('완료 (--build-only)');
+    ok(`IPA: ${ipaPath}`);
+    info(`업로드하려면: node scripts/local-release-ios.mjs --upload-only --ipa ${ipaPath} --build-number ${buildNumber}`);
+    return;
+  }
+
+  upload(ipaPath);
+  if (!DRY_RUN) await finish(config.appId, buildNumber);
+}
+
 async function main() {
   loadEnvFile();
   const config = resolveConfig();
@@ -424,6 +466,17 @@ async function main() {
     const buildNumber = BUILD_NUMBER_ARG ?? String((await latestBuildNumber(config.appId)) + 1);
     upload(resolve(IPA_ARG));
     if (!DRY_RUN) await finish(config.appId, buildNumber);
+    return;
+  }
+
+  // 아카이브까지 끝난 뒤 내보내기에서 멈춘 경우(키체인 승인 대기 등) 여기서 이어 붙인다.
+  // 15~20분짜리 빌드를 다시 돌릴 필요가 없다.
+  if (SKIP_ARCHIVE) {
+    step('기존 아카이브 재사용 (--skip-archive)');
+    if (!existsSync(ARCHIVE_PATH)) fail(`아카이브가 없습니다: ${ARCHIVE_PATH}`);
+    const buildNumber = BUILD_NUMBER_ARG ?? archiveBuildNumber();
+    ok(`${ARCHIVE_PATH} (빌드 ${buildNumber})`);
+    await exportUploadFinish(config, buildNumber);
     return;
   }
 
@@ -442,17 +495,7 @@ async function main() {
   if (!resolved.workspace && !DRY_RUN) fail('ios/*.xcworkspace 를 찾지 못했습니다.');
 
   archive({ ...resolved, teamId: config.teamId });
-  const ipaPath = exportIpa({ teamId: config.teamId });
-
-  if (BUILD_ONLY) {
-    step('완료 (--build-only)');
-    ok(`IPA: ${ipaPath}`);
-    info(`업로드하려면: node scripts/local-release-ios.mjs --upload-only --ipa ${ipaPath} --build-number ${buildNumber}`);
-    return;
-  }
-
-  upload(ipaPath);
-  if (!DRY_RUN) await finish(config.appId, buildNumber);
+  await exportUploadFinish(config, buildNumber);
 }
 
 async function finish(appId, buildNumber) {

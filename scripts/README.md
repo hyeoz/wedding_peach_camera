@@ -29,6 +29,7 @@ node scripts/local-release-ios.mjs --build-only          # IPA 까지만
 node scripts/local-release-ios.mjs --upload-only --ipa <경로> --build-number 7
 node scripts/local-release-ios.mjs --clean               # ios/ 를 지우고 prebuild
 node scripts/local-release-ios.mjs --skip-prebuild       # 기존 ios/ 재사용 (빠름)
+node scripts/local-release-ios.mjs --skip-archive        # 기존 아카이브부터 이어서
 node scripts/local-release-ios.mjs --build-number 12     # 빌드 번호 직접 지정
 ```
 
@@ -45,6 +46,37 @@ node scripts/local-release-ios.mjs --build-number 12     # 빌드 번호 직접 
 인증서·프로비저닝 프로파일은 **ASC API 키로 xcodebuild 가 알아서 발급/갱신**한다
 (`-authenticationKeyPath/-authenticationKeyID/-authenticationKeyIssuerID`).
 Xcode 에 사람이 로그인해 둘 필요도, fastlane 도 필요 없다.
+
+### 키체인 승인에서 멈췄을 때
+
+아카이브는 개발용 인증서로 통과하지만 **IPA 내보내기는 배포용 인증서로 다시
+서명**한다. 그 개인 키의 ACL 이 `codesign` 을 아직 신뢰하지 않으면 승인 창이 뜨고
+**사람이 누를 때까지 멈춘다.** 로그가 조용해서 원인을 짐작하기 어려우니 기억해 둘 것.
+
+증상 확인 — `xcodebuild -exportArchive` 가 CPU 를 안 쓰면서 멈춰 있고:
+
+```bash
+ps -ef | grep -E "codesign|SecurityAgent" | grep -v grep
+```
+
+**방법 1 — 창에서 "항상 허용" 누르기**
+
+```bash
+node scripts/local-release-ios.mjs --skip-archive
+# 승인 창이 뜨면 "항상 허용" → 이후 자동 진행
+```
+
+**방법 2 — 미리 승인 (창이 아예 안 뜬다, 로그인 비밀번호 필요)**
+
+```bash
+security set-key-partition-list -S apple-tool:,apple:,codesign: \
+  -s -k <로그인 비밀번호> ~/Library/Keychains/login.keychain-db
+node scripts/local-release-ios.mjs --skip-archive
+```
+
+어느 쪽이든 **한 번만** 해 두면 다음 릴리스부터는 조용히 지나간다.
+`--skip-archive` 는 `build-ios/app.xcarchive` 를 재사용하므로 15~20분짜리 빌드를
+다시 돌리지 않는다 (아카이브에 박힌 빌드 번호를 그대로 쓴다).
 
 필요한 환경 변수는 `.env.release` 에 있는 것과 같다 (`ASC_KEY_ID` / `ASC_ISSUER_ID` /
 `ASC_KEY_PATH`). 앱 식별 정보(`ASC_APP_ID`, `APPLE_TEAM_ID`)는 환경 변수로 주거나,
