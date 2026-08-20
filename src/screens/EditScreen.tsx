@@ -1,9 +1,11 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Image,
   Modal,
+  PixelRatio,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,8 +15,9 @@ import {
 } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import ViewShot from 'react-native-view-shot';
+import ViewShot, { captureRef } from 'react-native-view-shot';
 
+import { ExportCanvas } from '@/components/ExportCanvas';
 import { GradientBackground } from '@/components/GradientBackground';
 import { PillButton } from '@/components/PillButton';
 import { PlacedItemView } from '@/components/PlacedItemView';
@@ -48,6 +51,15 @@ interface NoteEdit {
 /** 사진 크기를 모를 때 쓰는 캔버스 비율. */
 const FALLBACK_ASPECT = 3 / 4;
 
+/**
+ * 저장 이미지 한 변의 상한(px).
+ *
+ * 원본 해상도로 다시 그린다는 건 그만한 비트맵을 메모리에 올린다는 뜻이다.
+ * 4096px 이면 12MP 안팎으로, 48MP 사진도 눈에 띄는 손해 없이 담기면서
+ * 디코딩 + 캡처 버퍼가 오래된 기기에서도 감당할 범위에 머문다.
+ */
+const MAX_EXPORT_EDGE = 4096;
+
 export function EditScreen({ navigation }: Props) {
   const {
     mode,
@@ -71,11 +83,13 @@ export function EditScreen({ navigation }: Props) {
   const { modalMaxWidth } = useResponsive();
 
   const shotRef = useRef<ViewShot>(null);
+  const exportViewRef = useRef<View>(null);
   const canvasRef = useRef<View>(null);
   const canvasOrigin = useSharedValue({ x: 0, y: 0 });
   const canvasSize = useSharedValue<Size>({ width: 0, height: 0 });
 
   const [capturing, setCapturing] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [noteEdit, setNoteEdit] = useState<NoteEdit | null>(null);
   const [noteValue, setNoteValue] = useState('');
   const [stage, setStage] = useState<Size>({ width: 0, height: 0 });
@@ -189,6 +203,27 @@ export function EditScreen({ navigation }: Props) {
     [updatePlacedItem, frameDefaults],
   );
 
+  /**
+   * 저장용 캔버스 크기(pt).
+   * 화면 캡처가 내던 해상도보다 낮아지지 않게 하면서, 사진 원본 픽셀을 목표로 잡는다.
+   */
+  const exportSize = useMemo<Size | null>(() => {
+    if (!canvas || !photoSize) return null;
+    const ratio = PixelRatio.get();
+    const screenCapturePx = canvas.width * ratio;
+    let widthPx = Math.max(photoSize.width, screenCapturePx);
+    let heightPx = widthPx / photoAspect;
+
+    const longest = Math.max(widthPx, heightPx);
+    if (longest > MAX_EXPORT_EDGE) {
+      const shrink = MAX_EXPORT_EDGE / longest;
+      widthPx *= shrink;
+      heightPx *= shrink;
+    }
+
+    return { width: Math.round(widthPx) / ratio, height: Math.round(heightPx) / ratio };
+  }, [canvas, photoSize, photoAspect]);
+
   if (!photo) {
     return (
       <GradientBackground>
@@ -237,17 +272,29 @@ export function EditScreen({ navigation }: Props) {
     setNoteEdit(null);
   };
 
+  /** 화면 캔버스 캡처 — 원본 해상도 합성이 불가능하거나 실패했을 때의 폴백. */
+  const captureVisibleCanvas = async () => {
+    const uri = await shotRef.current?.capture?.();
+    if (uri) {
+      setResultUri(uri);
+      navigation.navigate('Result');
+    }
+  };
+
   const handleDone = () => {
     setActiveItem(null);
     setCapturing(true);
+
+    if (exportSize) {
+      // 원본 해상도 캔버스를 붙였다가, 다 그려졌다는 신호(onReady)를 받고 캡처한다.
+      setExporting(true);
+      return;
+    }
+
     // 선택 UI가 사라진 뒤 캡처되도록 한 프레임 대기.
     setTimeout(async () => {
       try {
-        const uri = await shotRef.current?.capture?.();
-        if (uri) {
-          setResultUri(uri);
-          navigation.navigate('Result');
-        }
+        await captureVisibleCanvas();
       } catch (e) {
         Alert.alert('오류', e instanceof Error ? e.message : '이미지 생성에 실패했습니다.');
       } finally {
@@ -255,6 +302,34 @@ export function EditScreen({ navigation }: Props) {
       }
     }, 80);
   };
+
+  const handleExportReady = useCallback(async () => {
+    const options = { format: 'png' as const, quality: 1 };
+    try {
+      // 기본 캡처(drawViewHierarchyInRect)가 큰 뷰에서 막히는 경우가 있어,
+      // 실패하면 레이어를 직접 그리는 방식으로 한 번 더 시도한다.
+      const uri = await captureRef(exportViewRef, options).catch(() =>
+        captureRef(exportViewRef, { ...options, useRenderInContext: true }),
+      );
+      if (!uri) throw new Error('원본 해상도 합성 결과가 비어 있습니다.');
+      setResultUri(uri);
+      navigation.navigate('Result');
+    } catch {
+      // 원본 해상도 합성이 실패해도 저장 자체는 되게 화면 캡처로 물러선다.
+      try {
+        const fallbackUri = await shotRef.current?.capture?.();
+        if (fallbackUri) {
+          setResultUri(fallbackUri);
+          navigation.navigate('Result');
+        }
+      } catch (e) {
+        Alert.alert('오류', e instanceof Error ? e.message : '이미지 생성에 실패했습니다.');
+      }
+    } finally {
+      setExporting(false);
+      setCapturing(false);
+    }
+  }, [navigation, setResultUri]);
 
   return (
     <GradientBackground>
@@ -374,6 +449,32 @@ export function EditScreen({ navigation }: Props) {
           </Pressable>
         </Modal>
       </SafeAreaView>
+
+      {/*
+        저장용 원본 해상도 캔버스와 그것을 가리는 오버레이.
+        화면 밖으로 밀어내면 캡처가 빈 이미지로 나올 수 있어, 창 안 좌상단에 그대로
+        두고 위를 덮는다. 사용자에게는 "저장 준비 중" 화면만 보인다.
+      */}
+      {exporting && exportSize ? (
+        <>
+          <ExportCanvas
+            photo={photo}
+            items={placedItems}
+            width={exportSize.width}
+            height={exportSize.height}
+            nickname={profile.nickname}
+            frame={selectedFrame}
+            frameAspect={frameAspect}
+            getSticker={(refId) => getItem('sticker', refId)}
+            captureRef={exportViewRef}
+            onReady={handleExportReady}
+          />
+          <View style={styles.exportVeil}>
+            <ActivityIndicator color={colors.white} />
+            <Text style={styles.exportVeilLabel}>원본 화질로 만드는 중…</Text>
+          </View>
+        </>
+      ) : null}
     </GradientBackground>
   );
 }
@@ -405,6 +506,18 @@ const makeStyles = (colors: ThemeColors) =>
   canvas: {
     flex: 1,
     backgroundColor: colors.canvas,
+  },
+  exportVeil: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.md,
+    backgroundColor: 'rgba(43, 7, 93, 0.92)',
+  },
+  exportVeilLabel: {
+    fontFamily: fonts.title,
+    fontSize: 14,
+    color: colors.white,
   },
   trayWrap: {
     paddingHorizontal: spacing.lg,
