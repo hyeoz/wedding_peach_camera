@@ -1,0 +1,6 @@
+{
+  "CFBundleDisplayName": "웨피캠",
+  "NSCameraUsageDescription": "사진을 촬영하기 위해 카메라에 접근합니다.",
+  "NSPhotoLibraryUsageDescription": "꾸밀 사진과 직접 등록할 프레임·스티커 이미지를 불러오기 위해 사진에 접근합니다.",
+  "NSPhotoLibraryAddUsageDescription": "완성한 사진을 기기에 저장하기 위해 사진에 접근합니다."
+}
