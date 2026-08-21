@@ -1,6 +1,6 @@
 {
   "_comment": "App Store 스크린샷 캡션. slug 는 원본 파일명(.png)과 같아야 한다. compose-store-screenshots.py 가 읽는다.",
-  "_source": "실기기 캡처(iPhone IMG_3582·3585·3583·3584 / iPad IMG_0907·0910·0911·0912) 의 실제 화면 기준.",
+  "_source": "iPhone 은 실기기 캡처(IMG_3613~3617), iPad 는 시뮬레이터 캡처(store/screenshots/raw/ipad-simulator/) 의 실제 화면 기준. 앱 흐름 순서대로 5장.",
   "screens": [
     {
       "slug": "01-home",
@@ -18,7 +18,12 @@
       "sub": "손가락으로 자유롭게 배치하세요"
     },
     {
-      "slug": "04-result",
+      "slug": "04-text",
+      "caption": "날짜 한 줄까지\n사진 위에",
+      "sub": "오늘을 기록하는 텍스트 카드"
+    },
+    {
+      "slug": "05-result",
       "caption": "완성한 사진은\n저장하고 공유",
       "sub": "기기 앨범에 저장하거나 원하는 곳으로 바로"
     }
