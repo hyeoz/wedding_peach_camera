@@ -74,7 +74,7 @@ export async function resolveAssetUri(asset: MediaLibrary.Asset): Promise<string
   }
 }
 
-/** 합성 결과 이미지를 갤러리(전용 앨범)에 저장한다. */
+/** 촬영·합성 결과 이미지 또는 영상을 갤러리(전용 앨범)에 저장한다. */
 export async function saveToGallery(fileUri: string): Promise<void> {
   const perm = await MediaLibrary.requestPermissionsAsync();
   if (!perm.granted) throw new Error('저장을 위해 사진 접근 권한이 필요합니다.');

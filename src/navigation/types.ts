@@ -8,6 +8,7 @@ export type RootStackParamList = {
   Select: undefined;
   Source: undefined;
   Capture: undefined;
+  VideoCapture: undefined;
   Gallery: undefined;
   Edit: undefined;
   Result: undefined;

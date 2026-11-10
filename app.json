@@ -3,7 +3,7 @@
     "name": "웨피캠",
     "slug": "wepicam",
     "owner": "hyeoz",
-    "version": "1.0.0",
+    "version": "1.1.1",
     "icon": "./assets/icon-candidate-shoujo.png",
     "orientation": "portrait",
     "scheme": "wepicam",
@@ -31,9 +31,9 @@
           "ko"
         ],
         "CFBundleDisplayName": "웨피캠",
-        "NSCameraUsageDescription": "사진을 촬영하기 위해 카메라에 접근합니다.",
+        "NSCameraUsageDescription": "사진과 무음 동영상을 촬영하기 위해 카메라에 접근합니다.",
         "NSPhotoLibraryUsageDescription": "꾸밀 사진과 직접 등록할 프레임·스티커 이미지를 불러오기 위해 사진에 접근합니다.",
-        "NSPhotoLibraryAddUsageDescription": "완성한 사진을 기기에 저장하기 위해 사진에 접근합니다."
+        "NSPhotoLibraryAddUsageDescription": "완성한 사진과 촬영한 동영상을 기기에 저장하기 위해 사진에 접근합니다."
       }
     },
     "plugins": [
@@ -53,7 +53,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "사진을 촬영하기 위해 카메라에 접근합니다.",
+          "cameraPermission": "사진과 무음 동영상을 촬영하기 위해 카메라에 접근합니다.",
           "microphonePermission": false,
           "recordAudioAndroid": false
         }
@@ -68,7 +68,7 @@
         "expo-media-library",
         {
           "photosPermission": "완성한 사진을 기기에 저장하기 위해 사진에 접근합니다.",
-          "savePhotosPermission": "완성한 사진을 기기에 저장하기 위해 사진에 접근합니다."
+          "savePhotosPermission": "완성한 사진과 촬영한 동영상을 기기에 저장하기 위해 사진에 접근합니다."
         }
       ]
     ],

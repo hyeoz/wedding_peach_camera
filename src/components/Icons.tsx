@@ -78,6 +78,21 @@ export function CameraIcon({ size = 24, color = '#fff' }: IconProps) {
   );
 }
 
+export function VideoIcon({ size = 25, color = '#fff' }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Rect x={3} y={6} width={12} height={12} rx={3} stroke={color} strokeWidth={2.2} />
+      <Path
+        d="M15 10l4.7-2.6A.9.9 0 0121 8.2v7.6a.9.9 0 01-1.3.8L15 14"
+        stroke={color}
+        strokeWidth={2.2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
 export function ImageIcon({ size = 24, color = '#fff' }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -147,4 +162,3 @@ export function HomeIcon({ size = 16, color = '#b31877' }: IconProps) {
     </Svg>
   );
 }
-

@@ -1,10 +1,10 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { GradientBackground } from '@/components/GradientBackground';
-import { FrameIcon, StarIcon } from '@/components/Icons';
+import { FrameIcon, StarIcon, VideoIcon } from '@/components/Icons';
 import { useProfile } from '@/context/ProfileContext';
 import { useSession } from '@/context/SessionContext';
 import type { OverlayMode } from '@/data/library';
@@ -105,13 +105,39 @@ export function HomeScreen({ navigation }: Props) {
           카드만 중앙 정렬하면 제목은 위에 붙고 카드는 화면 한가운데로 내려가
           그 사이가 텅 비어 레이아웃이 깨진 것처럼 보인다.
         */}
-        <View style={[styles.body, isTablet && styles.bodyTablet]}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[styles.body, isTablet && styles.bodyTablet]}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.header}>
             <Text style={styles.title}>모드를 선택해주세요</Text>
-            <Text style={styles.subtitle}>프레임 · 스티커 · 텍스트로 사진을 꾸며요</Text>
+            <Text style={styles.subtitle}>사진 꾸미기 또는 무음 동영상을 촬영해요</Text>
           </View>
 
           <View style={styles.cards}>
+            <Pressable
+              onPress={() => navigation.navigate('VideoCapture')}
+              style={({ pressed }) => [
+                styles.card,
+                styles.videoCard,
+                pressed && styles.pressed,
+              ]}
+            >
+              <View style={[styles.iconCircle, styles.videoIcon]}>
+                <VideoIcon />
+              </View>
+              <View style={styles.cardText}>
+                <View style={styles.videoTitleRow}>
+                  <Text style={styles.videoTitle}>무음 동영상</Text>
+                  <View style={styles.newBadge}>
+                    <Text style={styles.newBadgeText}>NEW</Text>
+                  </View>
+                </View>
+                <Text style={styles.cardDesc}>소리 없이 최고 화질로 바로 저장해요</Text>
+              </View>
+            </Pressable>
+
             {cards.map((c) => (
               <Pressable
                 key={c.mode}
@@ -130,7 +156,7 @@ export function HomeScreen({ navigation }: Props) {
               </Pressable>
             ))}
           </View>
-        </View>
+        </ScrollView>
       </SafeAreaView>
     </GradientBackground>
   );
@@ -194,7 +220,9 @@ const makeStyles = (colors: ThemeColors) =>
     marginTop: 6,
   },
   body: {
+    flexGrow: 1,
     gap: spacing.lg,
+    paddingBottom: spacing.xl,
   },
   /**
    * 태블릿: 제목 + 카드를 한 덩어리로 묶어 남는 세로 공간의 가운데에 둔다.
@@ -207,6 +235,9 @@ const makeStyles = (colors: ThemeColors) =>
   },
   cards: {
     gap: spacing.md,
+  },
+  scroll: {
+    flex: 1,
   },
   card: {
     borderRadius: radius.card,
@@ -228,6 +259,35 @@ const makeStyles = (colors: ThemeColors) =>
   },
   cardText: {
     flex: 1,
+  },
+  videoCard: {
+    backgroundColor: '#ece8ff',
+    borderWidth: 1.5,
+    borderColor: '#cfc6ff',
+  },
+  videoIcon: {
+    backgroundColor: '#5f55d9',
+  },
+  videoTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  videoTitle: {
+    fontFamily: fonts.title,
+    fontSize: 18,
+    color: '#3f358f',
+  },
+  newBadge: {
+    borderRadius: radius.pill,
+    backgroundColor: '#5f55d9',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+  },
+  newBadgeText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 9,
+    color: colors.white,
   },
   cardTitle: {
     fontFamily: fonts.title,
