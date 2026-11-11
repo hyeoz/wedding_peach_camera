@@ -16,3 +16,9 @@ test('단축어 경로는 홈으로 돌아갈 수 있는 동영상 화면을 연
 test('미지원 경로로 동영상 촬영을 실행하지 않는다', () => {
   assert.equal(getStateFromPath('unknown', linking.config), undefined);
 });
+
+test('식단공유 경로는 홈 위에 식단공유 화면을 연다', () => {
+  const state = getStateFromPath('diet', linking.config);
+  assert.deepEqual(state?.routes.map(route => route.name), ['Home', 'DietShare']);
+  assert.equal(state?.index, 1);
+});

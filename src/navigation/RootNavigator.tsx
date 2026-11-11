@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 
 import { CaptureScreen } from '@/screens/CaptureScreen';
+import { DietShareScreen } from '@/screens/DietShareScreen';
 import { EditScreen } from '@/screens/EditScreen';
 import { GalleryScreen } from '@/screens/GalleryScreen';
 import { HomeScreen } from '@/screens/HomeScreen';
@@ -58,6 +59,7 @@ export function RootNavigator() {
         <Stack.Screen name="Gallery" component={GalleryScreen} />
         <Stack.Screen name="Edit" component={EditScreen} />
         <Stack.Screen name="Result" component={ResultScreen} />
+        <Stack.Screen name="DietShare" component={DietShareScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

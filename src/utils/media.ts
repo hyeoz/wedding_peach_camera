@@ -38,6 +38,17 @@ export async function pickImageFromLibrary(): Promise<Photo | null> {
   };
 }
 
+/** 시스템 카메라로 사진 1장 촬영 (식단공유처럼 칸마다 바로 찍어 넣는 흐름용). */
+export async function takePhotoWithCamera(): Promise<Photo | null> {
+  const perm = await ImagePicker.requestCameraPermissionsAsync();
+  if (!perm.granted) throw new Error('카메라 접근 권한이 필요합니다.');
+
+  const result = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.9 });
+  if (result.canceled || !result.assets?.length) return null;
+  const a = result.assets[0];
+  return { uri: a.uri, width: a.width, height: a.height, takenAt: Date.now(), takenAtSource: 'now' };
+}
+
 /** 기기 갤러리 최근 사진들을 불러온다 (인앱 그리드용). */
 export async function loadRecentPhotos(count = 30): Promise<MediaLibrary.Asset[]> {
   const perm = await MediaLibrary.requestPermissionsAsync();

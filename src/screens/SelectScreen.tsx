@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { DIET_TEMPLATE_NAME } from '@/components/DietStoryCanvas';
 import { GradientBackground } from '@/components/GradientBackground';
 import { Check, CloseIcon, StarIcon } from '@/components/Icons';
 import { PillButton } from '@/components/PillButton';
@@ -250,6 +251,29 @@ export function SelectScreen({ navigation }: Props) {
         <TopBar title={modeTitle(mode)} onBack={() => navigation.navigate('Home')} />
 
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+          {isFrame ? (
+            <Pressable
+              style={styles.layoutCard}
+              onPress={() => navigation.navigate('DietShare')}
+              accessibilityLabel={`${DIET_TEMPLATE_NAME} 레이아웃 열기`}
+            >
+              <View style={styles.layoutPreview}>
+                <View style={styles.layoutPreviewRule} />
+                <View style={styles.layoutPreviewRow}>
+                  <View style={styles.layoutPreviewPhoto} />
+                  <View style={styles.layoutPreviewPhoto} />
+                  <View style={styles.layoutPreviewPhoto} />
+                </View>
+              </View>
+              <View style={[styles.registerCopy, styles.flex1]}>
+                <Text style={styles.registerTitle}>{DIET_TEMPLATE_NAME}</Text>
+                <Text style={styles.registerHint}>
+                  몸무게·전날 대비·끼니 사진을 담는 스토리{'\n'}칸을 탭해서 사진과 글자를 채워요
+                </Text>
+              </View>
+            </Pressable>
+          ) : null}
+
           {imageMode ? (
             <View style={styles.registerSection}>
               <View style={styles.registerCopy}>
@@ -690,6 +714,32 @@ const makeStyles = (colors: ThemeColors) =>
     registerCopy: {
       gap: spacing.xs,
     },
+    layoutCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.lg,
+      marginHorizontal: spacing.lg,
+      marginBottom: spacing.lg,
+      padding: spacing.lg,
+      borderRadius: radius.card,
+      backgroundColor: 'rgba(255,255,255,0.72)',
+      ...shadow,
+    },
+    // 식단공유 캔버스(오트 톤)를 축소한 썸네일. 실제 레이아웃과 같은 비율로 그린다.
+    layoutPreview: {
+      width: 54,
+      height: 96,
+      borderRadius: 6,
+      backgroundColor: '#F7F3EE',
+      borderWidth: 3,
+      borderColor: '#EFE8DF',
+      paddingHorizontal: 5,
+      paddingTop: 18,
+      gap: 6,
+    },
+    layoutPreviewRule: { height: 8, width: 26, borderRadius: 2, backgroundColor: '#2F2A26' },
+    layoutPreviewRow: { flexDirection: 'row', gap: 2 },
+    layoutPreviewPhoto: { flex: 1, height: 22, backgroundColor: '#D9C7B0' },
     registerTitle: {
       fontFamily: fonts.title,
       fontSize: 17,
