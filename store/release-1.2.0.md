@@ -16,3 +16,9 @@
 
 - 2026-11-11 이 맥에서 Xcode 27.2 로 아카이브(Pods 최소 버전 15.1 로 맞춤), `scripts/local-release-ios.mjs --skip-archive --build-number 11` 로 업로드.
 - 빌드 11 VALID, 내부 그룹 `tester` IN_BETA_TESTING. 외부 그룹·심사 제출 없음.
+
+## 제출 결과
+
+- 2026-11-11 main 머지·푸시 후 버전 1.2.0 생성, 빌드 11 연결, 릴리스 노트(ko) 입력.
+- 심사 제출 ID: 518bc859-ac3d-4716-91e7-738bae2d8ba6, 버전 상태 WAITING_FOR_REVIEW.
+- 출시 설정: 심사 승인 후 자동 출시 (이전 버전과 동일).
