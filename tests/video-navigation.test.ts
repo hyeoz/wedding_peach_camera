@@ -22,3 +22,8 @@ test('식단공유 경로는 홈 위에 식단공유 화면을 연다', () => {
   assert.deepEqual(state?.routes.map(route => route.name), ['Home', 'DietShare']);
   assert.equal(state?.index, 1);
 });
+
+test('식단공유 경로는 format 쿼리로 게시글 비율을 고를 수 있다', () => {
+  const state = getStateFromPath('diet?format=feed', linking.config);
+  assert.deepEqual(state?.routes[1]?.params, { format: 'feed' });
+});

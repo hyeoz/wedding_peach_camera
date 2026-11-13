@@ -18,12 +18,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { captureRef } from 'react-native-view-shot';
 
 import {
+  DIET_FORMATS,
   DIET_TEMPLATE_NAME,
   DIET_THEMES,
   DietStoryCanvas,
   MEAL_LABELS,
-  STORY_ASPECT,
   type DietField,
+  type DietFormat,
   type DietStoryData,
   type DietThemeKey,
   type MealKey,
@@ -61,8 +62,6 @@ import { pickImageFromLibrary, takePhotoWithCamera } from '@/utils/media';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DietShare'>;
 
-/** 결과 이미지 크기 = 인스타 스토리 규격. */
-const OUTPUT = { width: 1080, height: 1920 };
 
 const EMPTY_PHOTOS: Record<MealKey, string | null> = { breakfast: null, lunch: null, dinner: null };
 const EMPTY_MEMOS: Record<MealKey, string> = { breakfast: '', lunch: '', dinner: '' };
@@ -76,7 +75,7 @@ interface InputState {
   maxLength: number;
 }
 
-export function DietShareScreen({ navigation }: Props) {
+export function DietShareScreen({ navigation, route }: Props) {
   const colors = useTheme();
   const styles = useThemedStyles(makeStyles);
   const bounds = useContentBounds();
@@ -87,6 +86,10 @@ export function DietShareScreen({ navigation }: Props) {
   const dateKey = toDateKey(date);
 
   const [theme, setTheme] = useState<DietThemeKey>('oat');
+  const [format, setFormat] = useState<DietFormat>(
+    route.params?.format === 'feed' ? 'feed' : 'story',
+  );
+  const [note, setNote] = useState('');
   const [entries, setEntries] = useState<DietLogEntry[]>([]);
   // 사용자가 직접 고친 값. null 이면 지난 기록에서 자동으로 채운 값을 쓴다.
   const [dayInput, setDayInput] = useState<string | null>(null);
@@ -128,9 +131,11 @@ export function DietShareScreen({ navigation }: Props) {
       weightValue !== null && previousValue !== null ? formatDelta(weightValue, previousValue) : '',
     photos,
     memos,
+    note,
   };
+  const output = DIET_FORMATS[format].output;
 
-  const canvasSize = fitInside(area, STORY_ASPECT);
+  const canvasSize = fitInside(area, output.width / output.height);
 
   const setPhoto = (meal: MealKey, uri: string | null) =>
     setPhotos((current) => ({ ...current, [meal]: uri }));
@@ -188,6 +193,16 @@ export function DietShareScreen({ navigation }: Props) {
           placeholder: '예: 그릭요거트, 바나나',
           keyboardType: 'default',
           maxLength: 24,
+        });
+        return;
+      case 'note':
+        setInput({
+          field,
+          title: '한 문장',
+          value: note,
+          placeholder: '예: 물 2L 성공',
+          keyboardType: 'default',
+          maxLength: 30,
         });
         return;
       case 'date':
@@ -251,6 +266,7 @@ export function DietShareScreen({ navigation }: Props) {
     else if (field.type === 'weight') setWeightInput(value);
     else if (field.type === 'previous') setPreviousInput(value);
     else if (field.type === 'day') setDayInput(value.replace(/\D/g, ''));
+    else if (field.type === 'note') setNote(value);
     setInput(null);
   };
 
@@ -265,8 +281,8 @@ export function DietShareScreen({ navigation }: Props) {
         const options = {
           format: 'png' as const,
           quality: 1,
-          width: OUTPUT.width / scale,
-          height: OUTPUT.height / scale,
+          width: output.width / scale,
+          height: output.height / scale,
         };
         const uri = await captureRef(canvasRef, options).catch(() =>
           captureRef(canvasRef, { ...options, useRenderInContext: true }),
@@ -296,6 +312,24 @@ export function DietShareScreen({ navigation }: Props) {
       <SafeAreaView style={[styles.container, bounds]} edges={['top', 'bottom']}>
         <TopBar title={DIET_TEMPLATE_NAME} onBack={() => navigation.goBack()} />
         <Text style={styles.hint}>칸을 탭해서 사진과 글자를 넣어요</Text>
+        <View style={styles.formatRow}>
+          {(Object.keys(DIET_FORMATS) as DietFormat[]).map((key) => {
+            const { label, ratio } = DIET_FORMATS[key];
+            const on = format === key;
+            return (
+              <Pressable
+                key={key}
+                onPress={() => setFormat(key)}
+                style={[styles.themeChip, on && styles.themeChipOn]}
+                accessibilityLabel={`${label} 비율`}
+              >
+                <Text style={[styles.themeLabel, on && styles.themeLabelOn]}>
+                  {label} {ratio}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
 
         <View
           style={styles.canvasArea}
@@ -309,6 +343,7 @@ export function DietShareScreen({ navigation }: Props) {
               <DietStoryCanvas
                 data={data}
                 theme={theme}
+                format={format}
                 width={canvasSize.width}
                 exporting={exporting}
                 onPressField={onPressField}
@@ -375,6 +410,12 @@ const makeStyles = (colors: ThemeColors) =>
       color: colors.textMuted,
       textAlign: 'center',
       marginBottom: spacing.sm,
+    },
+    formatRow: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      marginBottom: spacing.md,
     },
     canvasArea: {
       flex: 1,

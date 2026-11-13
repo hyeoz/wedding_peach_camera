@@ -43,7 +43,8 @@ export type DietField =
   | { type: 'weight' }
   | { type: 'previous' }
   | { type: 'day' }
-  | { type: 'date' };
+  | { type: 'date' }
+  | { type: 'note' };
 
 export interface DietStoryData {
   dateLabel: string;
@@ -54,11 +55,62 @@ export interface DietStoryData {
   delta: string;
   photos: Record<MealKey, string | null>;
   memos: Record<MealKey, string>;
+  /** 하단 한 문장 — 게시글 비율에서만 그린다. */
+  note: string;
 }
+
+/** 스토리(9:16)·게시글(4:5). 같은 구성을 비율에 맞춰 여백·사진 비율만 바꾼다. */
+export type DietFormat = 'story' | 'feed';
+
+interface Layout {
+  label: string;
+  ratio: string;
+  /** 결과 이미지 크기(px). */
+  output: { width: number; height: number };
+  /** 바탕 위 종이의 여백. 스토리는 위·아래 프로필/답장 UI 에 가리지 않게 넓게 둔다. */
+  inset: { top: number; bottom: number; side: number };
+  padTop: number;
+  padSide: number;
+  ruleGap: number;
+  weightSize: number;
+  photoAspect: number;
+  showNote: boolean;
+  footBottom: number;
+}
+
+export const DIET_FORMATS: Record<DietFormat, Layout> = {
+  story: {
+    label: '스토리',
+    ratio: '9:16',
+    output: { width: 1080, height: 1920 },
+    inset: { top: 200, bottom: 230, side: 54 },
+    padTop: 70,
+    padSide: 64,
+    ruleGap: 50,
+    weightSize: 190,
+    photoAspect: 9 / 16,
+    showNote: false,
+    footBottom: 46,
+  },
+  feed: {
+    label: '게시글',
+    ratio: '4:5',
+    output: { width: 1080, height: 1350 },
+    inset: { top: 44, bottom: 44, side: 44 },
+    padTop: 58,
+    padSide: 60,
+    ruleGap: 40,
+    weightSize: 168,
+    photoAspect: 1,
+    showNote: true,
+    footBottom: 40,
+  },
+};
 
 interface Props {
   data: DietStoryData;
   theme: DietThemeKey;
+  format: DietFormat;
   width: number;
   /** 캡처 중이면 편집 힌트를 감춘다. */
   exporting?: boolean;
@@ -66,7 +118,6 @@ interface Props {
 }
 
 const BASE_WIDTH = 1080;
-export const STORY_ASPECT = 9 / 16;
 
 const SERIF = Platform.select({ ios: 'Didot', default: 'serif' });
 const MEAL_EN: Record<MealKey, string> = { breakfast: 'breakfast', lunch: 'lunch', dinner: 'dinner' };
@@ -76,8 +127,9 @@ function T(props: TextProps) {
   return <Text allowFontScaling={false} {...props} />;
 }
 
-export function DietStoryCanvas({ data, theme, width, exporting = false, onPressField }: Props) {
+export function DietStoryCanvas({ data, theme, format, width, exporting = false, onPressField }: Props) {
   const t = DIET_THEMES[theme];
+  const L = DIET_FORMATS[format];
   const u = width / BASE_WIDTH;
   const px = (value: number) => value * u;
   const editing = !exporting && !!onPressField;
@@ -85,21 +137,21 @@ export function DietStoryCanvas({ data, theme, width, exporting = false, onPress
 
   const tap = (field: DietField) => (editing ? () => onPressField?.(field) : undefined);
 
-  const rule = <View style={{ height: Math.max(StyleSheet.hairlineWidth, px(1.5)), backgroundColor: t.line, marginVertical: px(50) }} />;
+  const rule = <View style={{ height: Math.max(StyleSheet.hairlineWidth, px(1.5)), backgroundColor: t.line, marginVertical: px(L.ruleGap) }} />;
   const caps = { fontSize: px(24), letterSpacing: px(7), color: t.sub, fontWeight: '500' as const };
 
   return (
-    <View style={{ width, height: width / STORY_ASPECT, backgroundColor: t.bg }}>
+    <View style={{ width, height: (width * L.output.height) / L.output.width, backgroundColor: t.bg }}>
       <View
         style={{
           position: 'absolute',
-          left: px(54),
-          right: px(54),
-          top: px(200),
-          bottom: px(230),
+          left: px(L.inset.side),
+          right: px(L.inset.side),
+          top: px(L.inset.top),
+          bottom: px(L.inset.bottom),
           backgroundColor: t.paper,
-          paddingTop: px(70),
-          paddingHorizontal: px(64),
+          paddingTop: px(L.padTop),
+          paddingHorizontal: px(L.padSide),
         }}
       >
         <View style={styles.rowBetween}>
@@ -125,8 +177,8 @@ export function DietStoryCanvas({ data, theme, width, exporting = false, onPress
               <T
                 style={{
                   fontFamily: SERIF,
-                  fontSize: px(190),
-                  lineHeight: px(190),
+                  fontSize: px(L.weightSize),
+                  lineHeight: px(L.weightSize),
                   letterSpacing: px(-2),
                   color: data.weight ? t.ink : t.line,
                 }}
@@ -167,7 +219,7 @@ export function DietStoryCanvas({ data, theme, width, exporting = false, onPress
                   onPress={tap({ type: 'photo', meal })}
                   style={{
                     width: '100%',
-                    aspectRatio: 9 / 16,
+                    aspectRatio: L.photoAspect,
                     borderWidth: uri ? 0 : px(1.5),
                     borderColor: t.line,
                     overflow: 'hidden',
@@ -200,7 +252,22 @@ export function DietStoryCanvas({ data, theme, width, exporting = false, onPress
           })}
         </View>
 
-        <View style={[styles.rowBetween, { position: 'absolute', left: px(64), right: px(64), bottom: px(46) }]}>
+        {L.showNote ? (
+          <>
+            <View style={{ height: px(1.5), backgroundColor: t.line, marginTop: px(8), marginBottom: px(32) }} />
+            <Pressable onPress={tap({ type: 'note' })} hitSlop={px(10)}>
+              <T style={{ textAlign: 'center', fontFamily: SERIF, fontStyle: 'italic', fontSize: px(40), color: t.ink }}>
+                {'“ '}
+                <T style={{ fontFamily: undefined, fontStyle: 'normal', fontSize: px(32), fontWeight: '300', color: data.note ? t.ink : t.sub }}>
+                  {data.note || hint('한 문장 입력') || '            '}
+                </T>
+                {' ”'}
+              </T>
+            </Pressable>
+          </>
+        ) : null}
+
+        <View style={[styles.rowBetween, { position: 'absolute', left: px(L.padSide), right: px(L.padSide), bottom: px(L.footBottom) }]}>
           <T style={[caps, { fontSize: px(18), letterSpacing: px(6) }]}>EAT WELL</T>
           <T style={[caps, { fontSize: px(18) }]}>·</T>
           <T style={[caps, { fontSize: px(18), letterSpacing: px(6) }]}>LIVE WELL</T>

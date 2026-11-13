@@ -268,7 +268,7 @@ export function SelectScreen({ navigation }: Props) {
               <View style={[styles.registerCopy, styles.flex1]}>
                 <Text style={styles.registerTitle}>{DIET_TEMPLATE_NAME}</Text>
                 <Text style={styles.registerHint}>
-                  몸무게·전날 대비·끼니 사진을 담는 스토리{'\n'}칸을 탭해서 사진과 글자를 채워요
+                  몸무게·전날 대비·끼니 사진을 담는 스토리·게시글{'\n'}칸을 탭해서 사진과 글자를 채워요
                 </Text>
               </View>
             </Pressable>

@@ -13,5 +13,5 @@ export type RootStackParamList = {
   Edit: undefined;
   Result: undefined;
   /** 프레임 > 식단공유 — 몸무게·끼니 사진을 넣는 스토리 레이아웃. */
-  DietShare: undefined;
+  DietShare: { format?: 'story' | 'feed' } | undefined;
 };
